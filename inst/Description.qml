@@ -103,5 +103,18 @@ Description
 		func:	"LSBuffonsneedlemanipulation"
 	}
 
+	GroupTitle
+	{
+		title:  qsTr("Species Classification")
+		// icon:   "" // TODO: You need an icon
+	}
+
+	Analysis
+	{
+		title:  qsTr("Species Classification")
+		qml:    "LSSpeciesclassification.qml"
+		func:   "LSSpeciesclassification"
+	}
+
 
 }
