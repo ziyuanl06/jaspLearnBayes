@@ -17,15 +17,18 @@
 
 
 LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL){
-  if (is.null(jaspResults[["readyTable"]])){
-    # 这里的名字建议换一个，不要叫 "ready"，换成更有意义的 "readyTable"
-    newTable <- createJaspTable(title = "This is a table")
-
-    # 必须至少定义一列，否则有些版本的 JASP 会因为表格是“空的”而报错
-    newTable$addColumnInfo(name = "status", title = "Status", type = "string")
-    newTable$addRows(list(status = "Successfully Loaded"))
-
-    jaspResults[["readyTable"]] <- newTable
-  }
+  .scIntro(jaspResults, options)
 }
 
+
+.scIntro <- function(jaspResults, options) {
+  if(isFALSE(options[["introductoryText"]])) return()
+  if(!is.null(jaspResults[["introductoryText"]])) return()
+
+  text <- gettextf('You need an explanation here...')
+
+  jaspResults[["introductoryText"]] <- createJaspHtml(title        = gettext("Welcome to Species Classification with JASP!"),
+                                                      text         = text,
+                                                      dependencies = "introductoryText",
+                                                      position     = 1)
+}

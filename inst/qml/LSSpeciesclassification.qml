@@ -18,7 +18,11 @@ import QtQuick
 import QtQuick.Layouts
 
 Form {
-    columns: 1
+    id: form
+    columns: 2      ///Question 0331: Why this is not working?
+    
+    LS.LSintrotext{}
+    ColorPalette{}
 
     RadioButtonGroup {
         id: inputType
@@ -53,12 +57,21 @@ Form {
             visible: inputType.value === "randsamp"
             title: qsTr("Random Sample")
 
-            FormulaField {
-                name: "nsample"
-                label: qsTr("Number of samples")
-                min: 0
-                defaultValue: 1
-                fieldWidth: 45
+            RowLayout {
+                spacing: 20
+
+                FormulaField {
+                    id: rdsampleinput
+                    name: "nsample"
+                    label: qsTr("Sample Size")
+                    min: 0
+                    defaultValue: 1
+                    fieldWidth: 45
+                }
+
+                Button {text: qsTr("Generate sample")  ; onClicked: {  redrawTrigger.value = redrawTrigger.value + 1; }}
+                Button {text: qsTr("Reset")             ; onClicked: {rdsampleinput.value = 0;redrawTrigger.value = 0}}
+
             }
 
             IntegerField {
@@ -67,13 +80,6 @@ Form {
                 name: "redrawTrigger"
                 defaultValue: 0
                 visible: false
-            }
-
-            Button {
-                text: qsTr("Draw new sample")
-                onClicked: {
-                    redrawTrigger.value = redrawTrigger.value + 1;
-                }
             }
 
         }
