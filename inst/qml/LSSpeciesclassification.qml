@@ -53,24 +53,47 @@ Form {
         expanded: true
         title: qsTr("Data")
 
+        RowLayout{
+            spacing: 50
+            CheckBox {
+            id: selectIslandBox
+            name: "selectisland"
+            label: qsTr("Select an Island")
+            checked: false
+        }
+
+        IntegerField {
+            id: islandidField
+            name: "islandid"
+            label: qsTr("Enter Island ID")
+            enabled: selectIslandBox.checked
+            defaultValue: 1
+            min: 1
+        }
+
+        }
+
+
+        
+
         Group {
             visible: inputType.value === "randsamp"
             title: qsTr("Random Sample")
 
             RowLayout {
-                spacing: 20
+                spacing: 60
 
                 FormulaField {
                     id: rdsampleinput
                     name: "nsample"
                     label: qsTr("Sample Size")
-                    min: 0
+                    min: 1
                     defaultValue: 1
                     fieldWidth: 45
                 }
 
                 Button {text: qsTr("Generate sample")  ; onClicked: {  redrawTrigger.value = redrawTrigger.value + 1; }}
-                Button {text: qsTr("Reset")             ; onClicked: {rdsampleinput.value = 0;redrawTrigger.value = 0}}
+                Button {text: qsTr("Reset")             ; onClicked: { redrawTrigger.value = 0; rdsampleinput.value = 1;  resetSample.value = resetSample.value + 1}}
 
             }
 
@@ -78,6 +101,13 @@ Form {
                 id: redrawTrigger
 
                 name: "redrawTrigger"
+                defaultValue: 0
+                visible: false
+            }
+
+            IntegerField{
+                id: resetSample
+                name: "resetSample"
                 defaultValue: 0
                 visible: false
             }

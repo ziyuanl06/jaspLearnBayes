@@ -16,46 +16,88 @@
 #
 
 
-LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL){
+LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL) {
   .scIntro(jaspResults, options)
 
   data_mode <- options[["inputType"]]
 
-  if (data_mode != "randsamp"){
-    jaspResults[["islandState"]] <- NULL
+  if (data_mode != "randsamp") {
+    jaspResults[["islandContainer"]] <- NULL
   }
 
-  if (data_mode == "randsamp"){
-    if (is.null(jaspResults[["islandState"]]) || options[["redrawTrigger"]] == 0) {
-      spe_island <- .scCreateIsland(jaspResults, options)
+  if (data_mode == "randsamp") {
+    .scCreateIsland(jaspResults, options)
+
+    if (options[["redrawTrigger"]] > 0) {
+      .scUpdateSample(jaspResults, options)
     }
 
+    if (!is.null(jaspResults[["sampleContainer"]])) {
+      .scDisplaySample(jaspResults, options)
+    }
   }
 }
 
 
 .scIntro <- function(jaspResults, options) {
-  if(isFALSE(options[["introductoryText"]])) return()
-  if(!is.null(jaspResults[["introductoryText"]])) return()
+  if (isFALSE(options[["introductoryText"]]))
+    return()
+  if (!is.null(jaspResults[["introductoryText"]]))
+    return()
 
   text <- gettextf('You need an explanation here...') #TODO
 
-  jaspResults[["introductoryText"]] <- createJaspHtml(title        = gettext("Welcome to Species Classification with JASP!"),
-                                                      text         = text,
-                                                      dependencies = "introductoryText",
-                                                      position     = 1)
+  jaspResults[["introductoryText"]] <- createJaspHtml(
+    title        = gettext("Welcome to Species Classification with JASP!"),
+    text         = text,
+    dependencies = "introductoryText",
+    position     = 1
+  )
 }
 
 
-.scCreateIsland <- function(jaspResults, options){
-  if (options[["redrawTrigger"]] != 0) return()
+.scCreateIsland <- function(jaspResults, options) {
+  if (!is.null(jaspResults[["islandContainer"]]))
+    return()
 
-  com_spe   <- c("Pigeon", "Duck", "Cat", "Dog", "Fox", "Sparrow", "Honeybee", "Squirrel")
-  uncom_spe <- c("Panda", "Kingfisher", "Sloth", "Capybara", "Lizard", "Eagle", "Koala", "Wombat")
-  rare_spe  <- c("Unicorn", "Phoenix", "Dragon", "Griffin", "Sphinx", "Pegasus", "Chimera", "Godzilla")
+  if (!isFALSE(options[["selectisland"]]))
+    set.seed(as.numeric(options[["islandid"]]))
+
+  container <- createJaspContainer(title = gettext("Island"))
+  container$dependOn(c("resetSample"))
+  jaspResults[["islandContainer"]] <- container
+
+  com_spe   <- c("Pigeon",
+                 "Duck",
+                 "Cat",
+                 "Dog",
+                 "Fox",
+                 "Sparrow",
+                 "Honeybee",
+                 "Squirrel")
+  uncom_spe <- c("Panda",
+                 "Kingfisher",
+                 "Sloth",
+                 "Capybara",
+                 "Lizard",
+                 "Eagle",
+                 "Koala",
+                 "Wombat")
+  rare_spe  <- c(
+    "Unicorn",
+    "Phoenix",
+    "Dragon",
+    "Griffin",
+    "Sphinx",
+    "Pegasus",
+    "Chimera",
+    "Godzilla"
+  )
 
   nspecies <- sample(1:5, 3, replace = TRUE)
-  ncom <- nspecies[1]; nuncom <- nspecies[2]; nrare <- nspecies[3]
+  ncom <- sample(1:8, 1, replace = TRUE)
+  nuncom <- sample(1:4, 1, replace = TRUE)
+  nrare <- sample(1:2, 1, replace = TRUE)
 
   total_spe <- ncom + nuncom + nrare
 
@@ -63,11 +105,88 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
   uncom_spe_sel <- sample(uncom_spe, nuncom, replace = FALSE)
   rare_spe_sel  <- sample(rare_spe, nrare, replace = FALSE)
 
-  spe_island <- c(rep(com_spe_sel, 12), rep(uncom_spe_sel, 7), rep(rare_spe_sel, 1))
+  spe_island <- c(rep(com_spe_sel, 12),
+                  rep(uncom_spe_sel, 7),
+                  rep(rare_spe_sel, 1))
+  all_sample <- c()
 
-  islandState <- createJaspState(spe_island)
-  islandState$dependOn(options = c("redrawTrigger"))
-  jaspResults[["islandState"]] <- islandState
+  container[["islandState"]] <- createJaspState(spe_island)
+  container[["sampleState"]] <- createJaspState(all_sample)
+}
 
-  return(spe_island)
+
+.scUpdateSample <- function(jaspResults, options) {
+  if (is.null(jaspResults[["sampleContainer"]])) {
+    samplecontainer <- createJaspContainer(title = gettext("Batch Sample"))
+    samplecontainer$dependOn(c("redrawTrigger"))
+    jaspResults[["sampleContainer"]] <- samplecontainer
+  }
+
+  if (is.null(jaspResults[["islandContainer"]]))
+    return()
+
+  if (is.null(jaspResults[["islandContainer"]][["islandState"]]))
+    return()
+
+  if (is.null(jaspResults[["islandContainer"]][["sampleState"]]))
+    return()
+
+  currentTrigger <- options[["redrawTrigger"]]
+
+  lastTriggerState <- jaspResults[["islandContainer"]][["lastTriggerState"]]
+
+  lastTriggerValue <- if (!is.null(lastTriggerState))
+    lastTriggerState$object
+  else
+    0
+
+  if (currentTrigger > lastTriggerValue) {
+    spe_island <- jaspResults[["islandContainer"]][["islandState"]]$object
+    batch_sample <- sample(spe_island, as.numeric(options[["nsample"]]), replace = TRUE)
+
+    all_sample <- jaspResults[["islandContainer"]][["sampleState"]]$object
+    all_sample <- c(all_sample, batch_sample)
+
+    jaspResults[["islandContainer"]][["sampleState"]] <- createJaspState(all_sample)
+
+    jaspResults[["islandContainer"]][["lastTriggerState"]] <- createJaspState(currentTrigger)
+
+    jaspResults[["sampleContainer"]][["sampleState"]] <- createJaspState(batch_sample)
+  }
+}
+
+.scDisplaySample <- function(jaspResults, options) {
+  if (!is.null(jaspResults[["batchTable"]]))
+    return()
+
+  if (is.null(jaspResults[["sampleContainer"]]) ||
+      is.null(jaspResults[["sampleContainer"]][["sampleState"]])
+  )
+    return()
+
+  batch_sample <- jaspResults[["sampleContainer"]][["sampleState"]]$object
+
+  if (length(batch_sample) == 0)
+    return()
+
+
+  batch_counts <- as.data.frame(table(batch_sample),  stringsAsFactors = FALSE)
+
+  batchTable <- createJaspTable(title = gettext("The Current Sample"))
+  batchTable$dependOn(c("redrawTrigger", "resetSample"))
+
+  batchTable$addColumnInfo(name = "species",
+                           title = gettext("Species"),
+                           type = "string")
+  batchTable$addColumnInfo(name = "counts",
+                           title = gettext("Count"),
+                           type = "integer")
+
+  for (i in seq_len(nrow(batch_counts))) {
+    batchTable$addRows(list(species = as.character(batch_counts[i, "batch_sample"]),
+                            counts = batch_counts[i, "Freq"]))
+  }
+
+  jaspResults[["batchTable"]] <- batchTable
+
 }
