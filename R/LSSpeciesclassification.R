@@ -18,6 +18,19 @@
 
 LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL){
   .scIntro(jaspResults, options)
+
+  data_mode <- options[["inputType"]]
+
+  if (data_mode != "randsamp"){
+    jaspResults[["islandState"]] <- NULL
+  }
+
+  if (data_mode == "randsamp"){
+    if (is.null(jaspResults[["islandState"]]) || options[["redrawTrigger"]] == 0) {
+      spe_island <- .scCreateIsland(jaspResults, options)
+    }
+
+  }
 }
 
 
@@ -25,10 +38,36 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
   if(isFALSE(options[["introductoryText"]])) return()
   if(!is.null(jaspResults[["introductoryText"]])) return()
 
-  text <- gettextf('You need an explanation here...')
+  text <- gettextf('You need an explanation here...') #TODO
 
   jaspResults[["introductoryText"]] <- createJaspHtml(title        = gettext("Welcome to Species Classification with JASP!"),
                                                       text         = text,
                                                       dependencies = "introductoryText",
                                                       position     = 1)
+}
+
+
+.scCreateIsland <- function(jaspResults, options){
+  if (options[["redrawTrigger"]] != 0) return()
+
+  com_spe   <- c("Pigeon", "Duck", "Cat", "Dog", "Fox", "Sparrow", "Honeybee", "Squirrel")
+  uncom_spe <- c("Panda", "Kingfisher", "Sloth", "Capybara", "Lizard", "Eagle", "Koala", "Wombat")
+  rare_spe  <- c("Unicorn", "Phoenix", "Dragon", "Griffin", "Sphinx", "Pegasus", "Chimera", "Godzilla")
+
+  nspecies <- sample(1:5, 3, replace = TRUE)
+  ncom <- nspecies[1]; nuncom <- nspecies[2]; nrare <- nspecies[3]
+
+  total_spe <- ncom + nuncom + nrare
+
+  com_spe_sel   <- sample(com_spe, ncom, replace = FALSE)
+  uncom_spe_sel <- sample(uncom_spe, nuncom, replace = FALSE)
+  rare_spe_sel  <- sample(rare_spe, nrare, replace = FALSE)
+
+  spe_island <- c(rep(com_spe_sel, 12), rep(uncom_spe_sel, 7), rep(rare_spe_sel, 1))
+
+  islandState <- createJaspState(spe_island)
+  islandState$dependOn(options = c("redrawTrigger"))
+  jaspResults[["islandState"]] <- islandState
+
+  return(spe_island)
 }
