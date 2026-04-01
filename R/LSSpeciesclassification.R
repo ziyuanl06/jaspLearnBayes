@@ -35,6 +35,10 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
     if (!is.null(jaspResults[["sampleContainer"]])) {
       .scDisplaySample(jaspResults, options)
     }
+
+    if (!is.null(jaspResults[["sampleContainer"]])) {
+      .scDisplayAll(jaspResults, options)
+    }
   }
 }
 
@@ -171,8 +175,9 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
 
   batch_counts <- as.data.frame(table(batch_sample),  stringsAsFactors = FALSE)
+  batch_counts <- batch_counts[order(-as.numeric(batch_counts$Freq)), ]
 
-  batchTable <- createJaspTable(title = gettext("The Current Sample"))
+  batchTable <- createJaspTable(title = gettext("The Current Batch"))
   batchTable$dependOn(c("redrawTrigger", "resetSample"))
 
   batchTable$addColumnInfo(name = "species",
@@ -187,6 +192,51 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
                             counts = batch_counts[i, "Freq"]))
   }
 
+  num_spe_batch <- nrow(batch_counts)
+
+  batchTable$addFootnote(message = gettextf("No. different species in the batch: %d", num_spe_batch))
+
   jaspResults[["batchTable"]] <- batchTable
+
+}
+
+.scDisplayAll <- function(jaspResults, options){
+  if (!is.null(jaspResults[["allTable"]]))
+    return()
+
+  if (is.null(jaspResults[["islandContainer"]]) ||
+      is.null(jaspResults[["islandContainer"]][["sampleState"]]))
+    return()
+
+  all_sample <- jaspResults[["islandContainer"]][["sampleState"]]$object
+
+  if (length(all_sample) == 0)
+    return()
+
+  all_counts <- as.data.frame(table(all_sample), stringsAsFactors = FALSE)
+  all_counts <- all_counts[order(-as.numeric(all_counts$Freq)), ]
+
+  allTable <- createJaspTable(title = gettext("The Whole Sample"))
+  allTable$dependOn(c("redrawTrigger", "resetSample"))
+
+  allTable$addColumnInfo(name = "species",
+                             title = gettext("Species"),
+                             type = "string")
+  allTable$addColumnInfo(name = "counts",
+                           title = gettext("Count"),
+                           type = "integer")
+  for (i in seq_len(nrow(all_counts))){
+    allTable$addRows(list(species = as.character(all_counts[i, "all_sample"]),
+                          counts = all_counts[i, "Freq"]))
+  }
+
+  num_spe_all <- nrow(all_counts)
+  num_samp_all <- sum(all_counts$Freq)
+
+  allTable$addFootnote(message = gettextf("No. different species in the over the sample: %d", num_spe_all))
+  allTable$addFootnote(message = gettextf("No. different individuals in the over the sample: %d", num_samp_all))
+
+  jaspResults[["allTable"]] <- allTable
+
 
 }
