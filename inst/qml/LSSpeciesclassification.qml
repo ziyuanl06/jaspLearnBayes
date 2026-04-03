@@ -20,9 +20,9 @@ import QtQuick.Layouts
 Form {
     id: form
     columns: 2      ///Question 0331: Why this is not working?
-    
-    LS.LSintrotext{}
-    ColorPalette{}
+
+    LS.LSintrotext {}
+    ColorPalette {}
 
     RadioButtonGroup {
         id: inputType
@@ -53,32 +53,31 @@ Form {
         expanded: true
         title: qsTr("Data")
 
-        RowLayout{
-            spacing: 50
-            CheckBox {
-            id: selectIslandBox
-            name: "selectisland"
-            label: qsTr("Select an Island")
-            checked: false
-        }
-
-        IntegerField {
-            id: islandidField
-            name: "islandid"
-            label: qsTr("Enter Island ID")
-            enabled: selectIslandBox.checked
-            defaultValue: 1
-            min: 1
-        }
-
-        }
-
-
-        
 
         Group {
             visible: inputType.value === "randsamp"
             title: qsTr("Random Sample")
+
+
+            RowLayout {
+                spacing: 50
+                CheckBox {
+                    id: selectIslandBox
+                    name: "selectisland"
+                    label: qsTr("Select an Island")
+                    checked: false
+                }
+
+                IntegerField {
+                    id: islandidField
+                    name: "islandid"
+                    label: qsTr("Enter Island ID")
+                    enabled: selectIslandBox.checked
+                    defaultValue: 1
+                    min: 1
+                }
+
+            }
 
             RowLayout {
                 spacing: 60
@@ -92,8 +91,8 @@ Form {
                     fieldWidth: 45
                 }
 
-                Button {text: qsTr("Generate sample")  ; onClicked: {  redrawTrigger.value = redrawTrigger.value + 1; }}
-                Button {text: qsTr("Reset")             ; onClicked: { redrawTrigger.value = 0; rdsampleinput.value = 1;  resetSample.value = resetSample.value + 1}}
+                Button {text: qsTr("Generate sample") ; onClicked: { redrawTrigger.value = redrawTrigger.value + 1; }}
+                Button {text: qsTr("Reset") ; onClicked: { redrawTrigger.value = 0; rdsampleinput.value = 1; resetSample.value = resetSample.value + 1}}
 
             }
 
@@ -105,11 +104,32 @@ Form {
                 visible: false
             }
 
-            IntegerField{
+            IntegerField {
                 id: resetSample
                 name: "resetSample"
                 defaultValue: 0
                 visible: false
+            }
+
+
+        }
+        Group {
+            title: qsTr("Bar Graph")
+
+            RowLayout {
+                spacing: 80
+
+                CheckBox {
+                    name: "barBatch"
+                    label: qsTr("the Current Batch")
+                    checked: false
+                }
+
+                CheckBox {
+                    name: "barAllSample"
+                    label: qsTr("Overall")
+                    checked: false
+                }
             }
 
         }
