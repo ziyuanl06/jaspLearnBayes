@@ -38,15 +38,12 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
                                "redrawTrigger", "resetSample"))
       jaspResults[["dataContainer"]] <- dataContainer
     }
-<<<<<<< Updated upstream
-=======
 
     if (!is.null(jaspResults[["dataContainer"]])) {
       .scDisplaySample(jaspResults, options, jaspResults[["dataContainer"]])
       .scDisplayAll(jaspResults, options, jaspResults[["dataContainer"]])
     }
 
->>>>>>> Stashed changes
   }
 
   if (!isFALSE(options[["barBatch"]]))
@@ -193,14 +190,10 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
 
   batch_counts <- as.data.frame(table(batch_sample),  stringsAsFactors = FALSE)
+  batch_counts <- batch_counts[order(-as.numeric(batch_counts$Freq)), ]
 
-<<<<<<< Updated upstream
-  batchTable <- createJaspTable(title = gettext("The Current Sample"))
-  batchTable$dependOn(c("redrawTrigger", "resetSample"))
-=======
   batchTable <- createJaspTable(title = gettext("The Current Batch"))
   batchTable$dependOn(c("inputType","randsamp", "speandnum", "sampseq","redrawTrigger", "resetSample"))
->>>>>>> Stashed changes
 
   batchTable$addColumnInfo(name = "species",
                            title = gettext("Species"),
@@ -214,11 +207,6 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
                             counts = batch_counts[i, "Freq"]))
   }
 
-<<<<<<< Updated upstream
-  jaspResults[["batchTable"]] <- batchTable
-
-}
-=======
   num_spe_batch <- nrow(batch_counts)
 
   batchTable$addFootnote(message = gettextf("No. different species in the batch: %d", num_spe_batch))
@@ -333,4 +321,3 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
   return(p)
 }
->>>>>>> Stashed changes
