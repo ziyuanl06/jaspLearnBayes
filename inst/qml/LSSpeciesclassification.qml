@@ -12,10 +12,10 @@
 // <http://www.gnu.org/licenses/>.
 
 import "../qml/qml_components" as LS
-import JASP
-import JASP.Controls
-import QtQuick
-import QtQuick.Layouts
+import QtQuick 2.12
+import QtQuick.Layouts 1.12
+import JASP.Controls 1.0
+import JASP 1.0
 
 Form {
     id: form
@@ -82,7 +82,7 @@ Form {
             RowLayout {
                 spacing: 60
 
-                FormulaField {
+                IntegerField {
                     id: rdsampleinput
                     name: "nsample"
                     label: qsTr("Sample Size")
@@ -133,6 +133,177 @@ Form {
             }
 
         }
+
+    }
+
+    Section {
+        expanded: true
+        title: qsTr("Model")
+
+        ColumnLayout {
+            spacing: 0
+            Layout.preferredWidth: parent.width
+
+            RowLayout {
+                Label {text: qsTr("Model");            Layout.leftMargin: 5 * preferencesModel.uiScale; Layout.preferredWidth: 90 * preferencesModel.uiScale}
+                Label {text: qsTr("Distribution");     Layout.preferredWidth: 100 * preferencesModel.uiScale}
+                Label {text: qsTr("Parameter");        Layout.preferredWidth: 130 * preferencesModel.uiScale}
+                Label {text: qsTr("Min and Max");      Layout.preferredWidth: 142 * preferencesModel.uiScale}
+                Label {text: qsTr("Explain");          Layout.preferredWidth: 62 * preferencesModel.uiScale}
+                Label {text: qsTr("Plot");             }
+            }
+
+            ComponentsList{
+                name: "models"
+                defaultValues: []
+                rowComponent: RowLayout{
+                    spacing:  0
+                    Row{
+                        Layout.preferredWidth:   95 * preferencesModel.uiScale
+                        TextField{
+                            label:               ""
+                            name:                "name"
+                            startValue:			 qsTr("Model ") + (rowIndex + 1)
+                            fieldWidth:			 85 * preferencesModel.uiScale
+                            useExternalBorder:   false
+                            showBorder:          true
+                            toolTip:             qsTr("How would you like to name this model?")
+                        }
+                    }
+
+                    Row{
+                        Layout.preferredWidth:   105 * preferencesModel.uiScale
+
+                        DropDown{
+                            id: typeItem
+                            name: "type"
+                            useExternalBorder: true
+                            fieldWidth:			 95 * preferencesModel.uiScale
+                            values:
+                            [
+                                { label: qsTr("Point"),                value: "point"},
+                                { label: qsTr("Uniform"),              value: "uniform"},
+                                { label: qsTr("Poisson"),              value: "poisson"},
+                                { label: qsTr("Negative Binomial"),    value: "negbino"}
+                            ]
+                        }
+                    }
+
+                    Row {
+                        Layout.preferredWidth: 135 * preferencesModel.uiScale
+                        spacing:               4 * preferencesModel.uiScale
+                        IntegerField{
+                            label:             qsTr("N")
+                            name:              "pointPriorN"
+                            visible:           typeItem.currentValue === "point"
+                            value:             1
+                            min:               1
+                            fieldWidth:        50 * preferencesModel.uiScale
+                            inclusive:         JASP.MinOnly
+                            useExternalBorder: false
+                            showBorder:        true
+                            toolTip:           qsTr("How many different species do you think are there on the island?")
+
+                        }
+
+
+                        IntegerField{
+                            label:             qsTr("λ")
+                            name:              "poissonlambda"
+                            visible:           typeItem.currentValue === "poisson"
+                            fieldWidth:        50 * preferencesModel.uiScale
+                            value:             1
+                            min:               1
+                            inclusive:         JASP.MinOnly
+                            useExternalBorder: false
+                            showBorder:        true
+                            toolTip:           qsTr("What is the most likely number of species on the island?")
+
+                        }
+
+
+                        IntegerField{
+                            label:             qsTr("μ")
+                            name:              "nbMu"
+                            visible:           typeItem.currentValue === "negbino"
+                            fieldWidth:        50 * preferencesModel.uiScale
+                            value:             1
+                            min:               1
+                            inclusive:         JASP.MinOnly
+                            useExternalBorder: false
+                            showBorder:        true
+                            toolTip:           qsTr("What is the most likely number of species on the island?")
+
+                        }
+
+                        IntegerField{
+                            label:             qsTr("ϕ")
+                            name:              "nbPhi"
+                            visible:           typeItem.currentValue === "negbino"
+                            fieldWidth:        50 * preferencesModel.uiScale
+                            value:             1
+                            min:               0
+                            inclusive:         JASP.None
+                            useExternalBorder: false
+                            showBorder:        true
+                            toolTip:           qsTr("How certain your are? Enter a positive value, larger values allow for more uncertainty")
+
+                        }
+
+
+
+                        
+                    }
+                    Row{
+                        spacing:               4 * preferencesModel.uiScale
+                        Layout.preferredWidth: 155 * preferencesModel.uiScale
+                        IntegerField{
+                            label:             qsTr("Min")
+                            name:              "minimum"
+                            fieldWidth:        40 * preferencesModel.uiScale
+                            value:             1
+                            min:               1
+                            inclusive:         JASP.MinOnly
+                            useExternalBorder: false
+                            showBorder:        true
+                            toolTip:           qsTr("What do you think is the minimum posible number of different species on the island?")
+
+                        }
+
+                        IntegerField{
+                            label:             qsTr("Max")
+                            name:              "maximum"
+                            fieldWidth:        40 * preferencesModel.uiScale
+                            value:             1
+                            min:               1
+                            inclusive:         JASP.MinOnly
+                            useExternalBorder: false
+                            showBorder:        true
+                            toolTip:           qsTr("What do you think is the maximum posible number of different species on the island?")
+
+                        }
+                    }
+                    Row {
+                            Layout.preferredWidth: 55 * preferencesModel.uiScale
+                            CheckBox {
+                                name:    "showExplain"
+                                label:   "" 
+                                toolTip: qsTr("Check to display a text explanation of this model in the results.")
+                            }
+                    }
+                    Row {
+                            Layout.preferredWidth: 55 * preferencesModel.uiScale
+                            CheckBox {
+                                name:    "showPlot"
+                                label:   "" 
+                                toolTip: qsTr("Check to display a distribution plot of this model in the results.")
+                            }
+                    }
+                }
+
+            }
+        }
+
 
     }
 
