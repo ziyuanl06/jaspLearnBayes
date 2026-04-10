@@ -12,10 +12,10 @@
 // <http://www.gnu.org/licenses/>.
 
 import "../qml/qml_components" as LS
-import QtQuick 2.12
-import QtQuick.Layouts 1.12
-import JASP.Controls 1.0
-import JASP 1.0
+import QtQuick
+import QtQuick.Layouts
+import JASP.Controls
+import JASP
 
 Form {
     id: form
@@ -138,18 +138,18 @@ Form {
 
     Section {
         expanded: true
-        title: qsTr("Model")
+        title: qsTr("Prior Beliefs")
 
         ColumnLayout {
             spacing: 0
             Layout.preferredWidth: parent.width
 
             RowLayout {
-                Label {text: qsTr("Model");            Layout.leftMargin: 5 * preferencesModel.uiScale; Layout.preferredWidth: 90 * preferencesModel.uiScale}
-                Label {text: qsTr("Distribution");     Layout.preferredWidth: 100 * preferencesModel.uiScale}
-                Label {text: qsTr("Parameter");        Layout.preferredWidth: 130 * preferencesModel.uiScale}
-                Label {text: qsTr("Min and Max");      Layout.preferredWidth: 142 * preferencesModel.uiScale}
-                Label {text: qsTr("Explain");          Layout.preferredWidth: 62 * preferencesModel.uiScale}
+                Label {text: qsTr("Model");            Layout.leftMargin: 5 * preferencesModel.uiScale; Layout.preferredWidth: 80 * preferencesModel.uiScale}
+                Label {text: qsTr("Distribution");     Layout.preferredWidth: 90 * preferencesModel.uiScale}
+                Label {text: qsTr("Parameter");        Layout.preferredWidth: 120 * preferencesModel.uiScale}
+                Label {text: qsTr("Min and Max");      Layout.preferredWidth: 130 * preferencesModel.uiScale}
+                Label {text: qsTr("Explain");          Layout.preferredWidth: 50 * preferencesModel.uiScale}
                 Label {text: qsTr("Plot");             }
             }
 
@@ -159,7 +159,7 @@ Form {
                 rowComponent: RowLayout{
                     spacing:  0
                     Row{
-                        Layout.preferredWidth:   95 * preferencesModel.uiScale
+                        Layout.preferredWidth:   97 * preferencesModel.uiScale
                         TextField{
                             label:               ""
                             name:                "name"
@@ -258,9 +258,11 @@ Form {
                         spacing:               4 * preferencesModel.uiScale
                         Layout.preferredWidth: 155 * preferencesModel.uiScale
                         IntegerField{
+                            id:                minfield
                             label:             qsTr("Min")
                             name:              "minimum"
                             fieldWidth:        40 * preferencesModel.uiScale
+                            visible:           typeItem.currentValue !== "point"
                             value:             1
                             min:               1
                             inclusive:         JASP.MinOnly
@@ -271,11 +273,13 @@ Form {
                         }
 
                         IntegerField{
+                            id:                maxfield
                             label:             qsTr("Max")
                             name:              "maximum"
                             fieldWidth:        40 * preferencesModel.uiScale
+                            visible:           typeItem.currentValue !== "point"
                             value:             1
-                            min:               1
+                            min:               minfield.value
                             inclusive:         JASP.MinOnly
                             useExternalBorder: false
                             showBorder:        true
@@ -292,7 +296,7 @@ Form {
                             }
                     }
                     Row {
-                            Layout.preferredWidth: 55 * preferencesModel.uiScale
+                            Layout.preferredWidth: 15 * preferencesModel.uiScale
                             CheckBox {
                                 name:    "showPlot"
                                 label:   "" 
@@ -302,6 +306,74 @@ Form {
                 }
 
             }
+        }
+
+        Group{
+            title: qsTr("Prior Summary Statistics")
+            name: "priorTableOptions"
+
+            RowLayout {
+                spacing: 30
+
+                CheckBox {
+                    name: "priorMean"
+                    label: qsTr("Mean")
+                    checked: false
+                }
+
+                CheckBox {
+                    name: "priorMedian"
+                    label: qsTr("Median")
+                    checked: false
+                }
+                CheckBox {
+                    name: "priorMode"
+                    label: qsTr("Mode")
+                    checked: false
+                }
+
+                CheckBox {
+                    name: "priorSD"
+                    label: qsTr("Standard Deviation")
+                    checked: false
+                }
+            }
+
+            Row {
+                spacing:               4 * preferencesModel.uiScale
+
+                CheckBox {
+                    id:  minandmax
+                    name: "variableBetween"
+                    label: "Probability of S Between (min and max included):"
+                    checked: false
+                }
+
+                IntegerField {
+                    id:   mincut
+                    name: "priorUserMin"
+                    label: "Min"
+                    fieldWidth: 40 * preferencesModel.uiScale
+                    value: 1
+                    min: 1
+                    enabled: minandmax.checked 
+                    showBorder: true
+                }
+
+                IntegerField {
+                    name: "priorUserMax"
+                    label: "Max"
+                    fieldWidth: 40 * preferencesModel.uiScale
+                    value: 5
+                    min: mincut.value
+                    enabled: minandmax.checked
+                    showBorder: true
+                }
+            }
+                
+
+        
+        
         }
 
 

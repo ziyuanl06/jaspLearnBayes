@@ -21,6 +21,15 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
   data_mode <- options[["inputType"]]
 
+  if (is.null(jaspResults[["dataContainer"]])) {
+    dataContainer <- createJaspContainer(title = gettext("Data"))
+    dataContainer$dependOn(c("inputType", "randsamp", "speandnum", "sampseq",
+                             "redrawTrigger", "resetSample"))
+    jaspResults[["dataContainer"]] <- dataContainer
+  }
+
+
+
   if (data_mode != "randsamp") {
     jaspResults[["islandContainer"]] <- NULL
   }
@@ -32,18 +41,12 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
       .scUpdateSample(jaspResults, options)
     }
 
-    if (is.null(jaspResults[["dataContainer"]])) {
-      dataContainer <- createJaspContainer(title = gettext("Data"))
-      dataContainer$dependOn(c("inputType", "randsamp", "speandnum", "sampseq",
-                               "redrawTrigger", "resetSample"))
-      jaspResults[["dataContainer"]] <- dataContainer
-    }
 
-    if (!is.null(jaspResults[["dataContainer"]])) {
-      .scDisplaySample(jaspResults, options, jaspResults[["dataContainer"]])
-      .scDisplayAll(jaspResults, options, jaspResults[["dataContainer"]])
-    }
+  }
 
+  if (!is.null(jaspResults[["dataContainer"]])) {
+    .scDisplaySample(jaspResults, options, jaspResults[["dataContainer"]])
+    .scDisplayAll(jaspResults, options, jaspResults[["dataContainer"]])
   }
 
   if (!isFALSE(options[["barBatch"]]))
@@ -51,6 +54,23 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
   if (!isFALSE(options[["barAllSample"]]))
     .scDrawAllBar(jaspResults, options, jaspResults[["dataContainer"]])
+
+  #######################Models#############################
+  modelContainer <- jaspResults[["modelContainer"]]
+
+  if (is.null(modelContainer)){
+    modelContainer <- createJaspContainer(title = gettext("Model"))
+    modelContainer$dependOn(c("inputType", "randsamp", "speandnum", "sampseq",
+                              "models"))
+    jaspResults[["modelContainer"]] <- modelContainer
+  }
+
+  if (!is.null(modelContainer)){
+    .scDisplayModel(jaspResults, options, modelContainer)
+    .scSummaryModel(jaspResults, options, modelContainer)
+    .scPlotModel(jaspResults, options, modelContainer)
+  }
+
 }
 
 
@@ -256,6 +276,7 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
 }
 
+
 .scDrawBatchBar <- function(jaspResults, options, dataContainer){
   if (!is.null(dataContainer[["batchBar"]]))
     return()
@@ -303,6 +324,160 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 }
 
 
+#################Models#######################################
+.scDisplayModel <- function(jaspResults, options, modelContainer){
+  if (is.null(options[["models"]]))
+    return()
+  if (!is.null(modelContainer[["modelTable"]]))
+    return()
+
+  modelTable <- createJaspTable(title = gettext("Models"))
+  modelTable$dependOn(c("inputType", "randsamp", "speandnum", "sampseq",
+                        "models"))
+  ###Code###
+  modelTable$addColumnInfo(name = "name",          title = gettext("Name"),         type = "string")
+  modelTable$addColumnInfo(name = "distribution",  title = gettext("Distribution"), type = "string")
+  modelTable$addColumnInfo(name = "para",          title = gettext("Parameter"), type = "string")
+  modelTable$addColumnInfo(name = "min",           title = gettext("Min"),       type = "integer")
+  modelTable$addColumnInfo(name = "max",           title = gettext("Max"),       type = "integer")
+
+  modelContainer[["modelTable"]] <- modelTable
+
+
+  explainModel <- sapply(options[["models"]], function(m) m[["showExplain"]])
+
+  for (m in options[["models"]]) {
+    name <- m[["name"]]
+    distribution <- m[["type"]]
+    if (m[["type"]] == "point"){
+      para <- paste0("N = ", m[["pointPriorN"]])
+      min <- ""
+      max <- ""
+      desc <- ifelse(m[["showExplain"]], .scDescText(m), "")
+    }else if (m[["type"]] == "uniform"){
+      para <- ""
+      min <- m[["minimum"]]
+      max <- m[["maximum"]]
+      desc <- ifelse(m[["showExplain"]], .scDescText(m), "")
+    }else if (m[["type"]] == "poisson"){
+      para <- paste0("\u03BB = ", m[["poissonlambda"]])
+      min <- m[["minimum"]]
+      max <- m[["maximum"]]
+      desc <- ifelse(m[["showExplain"]], .scDescText(m), "")
+    }else if (m[["type"]] == "negbino"){
+      para <- paste0("\u03BC = ", m[["nbMu"]], ", \u03D5 = ", m[["nbPhi"]])
+      min <- m[["minimum"]]
+      max <- m[["maximum"]]
+      desc <- ifelse(m[["showExplain"]], .scDescText(m), "")
+    }
+
+    rowList <- list(
+      name = name,
+      distribution = distribution,
+      para = para,
+      min = as.character(min),
+      max = as.character(max)
+    )
+
+
+    modelTable$addRows(rowList)
+
+    if (m[["showExplain"]]) {
+      htmlID <- paste0("html_desc_", m[["name"]])
+
+      htmlContent <- gettextf("<b>Explanation for %1$s:</b><br>%2$s",
+                              m[["name"]], .scDescText(m))
+
+      modelContainer[[htmlID]] <- createJaspHtml(htmlContent)
+
+      modelContainer[[htmlID]]$maxWidth <- "600px"
+    }
+  }
+}
+
+.scSummaryModel <- function(jaspResults, options, modelContainer){
+  if (is.null(options[["models"]]))
+    return()
+  if (!is.null(modelContainer[["priorSumTable"]]))
+    return()
+
+  priorSumTable <- createJaspTable(title = gettext("Prior Summary Statistics"))
+  priorSumTable$dependOn(c("models", "priorMean", "priorMedian", "priorMode",
+                           "priorSD", "variableBetween", "priorUserMin", "priorUserMax"))
+
+  priorSumTable$addColumnInfo(name = "name", title = gettext("Model"), type = "string")
+
+  stAllOptions <- c("priorMean", "priorMedian", "priorMode",
+                    "priorSD", "variableBetween")
+
+  idx_checked <- which(as.logical(options[stAllOptions]))
+
+  if (length(idx_checked) == 0) return()
+
+  stAllTitles <- c(gettext("priorMean"),
+                   gettext("priorMedian"),
+                   gettext("priorMode"),
+                   gettext("priorSD"),
+                   gettextf("P(%1$s \u2264 S \u2264 %2$s)", options[["priorUserMin"]], options[["priorUserMax"]])
+  )
+
+  for (i in idx_checked) {
+    priorSumTable$addColumnInfo(name = stAllOptions[i], title = stAllTitles[i], type = "number")
+  }
+
+  modelContainer[["priorSumTable"]] <- priorSumTable
+
+  for (m in options[["models"]]) {
+    mPMF <- .scGetModelPMF(m)
+    name <- m[["name"]]
+    m_sum_list <- list(name = name)
+
+    stat_vec <- list(priorMean     = .scCalculateMean(mPMF),
+                     priorMedian   = .scCalculateMedian(mPMF),
+                     priorMode     = .scCalculateMode(mPMF),
+                     priorSD       = .scCalculateSD(mPMF),
+                     variableBetween  = .scCalculateProbability(mPMF, as.numeric(options[["priorUserMin"]]),
+                                                             as.numeric(options[["priorUserMax"]])))
+
+    for (i in idx_checked) {
+      opt_name <- stAllOptions[i]
+      m_sum_list[[opt_name]] <- stat_vec[[opt_name]]
+    }
+
+    priorSumTable$addRows(m_sum_list)
+  }
+
+}
+
+.scPlotModel <- function(jaspResults, options, modelContainer){
+  for (m in options[["models"]]){
+    if (!isFALSE(m[["showPlot"]])){
+      mPMF <- .scGetModelPMF(m)
+      plotName <- paste0("Prior_plot_", m[["name"]])
+      pPlot <- createJaspPlot(title = plotName, width = 450, height = 300)
+      pPlot$dependOn(c("models", "priorMean", "priorMedian", "priorMode",
+                       "priorSD", "variableBetween", "priorUserMin", "priorUserMax"))
+
+      dfPMF <- data.frame(s = mPMF[["s"]], p = mPMF[["p"]])
+
+      plotObj <- ggplot2::ggplot(dfPMF, ggplot2::aes(x = s, y = p)) +
+        ggplot2::geom_bar(stat = "identity", color = "black", width = 0.7) +
+        ggplot2::scale_fill_manual(values = c("no" = "grey80", "yes" = "#3e92cc"), guide = "none") +
+        ggplot2::labs(x = gettext("Number of Species (S)"), y = gettext("Prior Probability"))
+      plotObj <- plotObj +
+        ggplot2::xlim(0, max(dfPMF$s) + 2) +
+        jaspGraphs::geom_rangeframe() +
+        jaspGraphs::themeJaspRaw()
+
+      pPlot$plotObject <- plotObj
+
+      modelContainer[[plotName]] <- pPlot
+    }
+  }
+}
+
+
+#################Helper Functions#############################
 .scFillDataBarPlot <- function(sample_vec){
   df <- as.data.frame(table(Species = sample_vec))
   colnames(df) <- c("Species", "Count")
@@ -321,3 +496,109 @@ LSSpeciesclassification <- function(jaspResults, dataset, options, state = NULL)
 
   return(p)
 }
+
+
+.scDescText <- function(model){
+  if (model[["type"]] == "point"){
+    desc <- gettextf("You are absolutely certain there are exactly %s species, all in, no more, no less",
+                     model[["pointPriorN"]])
+
+  }else if (model[["type"]] == "uniform"){
+    desc <- gettextf("You know that the number of different species lies between %1$s and %2$s, but anything in between is equally likely, no additional information.",
+                     model[["minimum"]], model[["maximum"]])
+
+  }else if (model[["type"]] == "poisson"){
+    desc <- gettextf("You know the number of different species lies between %1$s and %2$s, and you expect the number to be around %3$s on average.",
+                     model[["minimum"]], model[["maximum"]], model[["poissonlambda"]])
+
+  }else if (model[["type"]] == "negbino"){
+    desc <- gettextf("You know the number of different species lies between %1$s and %2$s. You expect about %3$s species, but you've added some uncertainty (\u03D5 = %4$s)",
+                     model[["minimum"]], model[["maximum"]], model[["nbMu"]], model[["nbPhi"]])
+  }
+
+  return(desc)
+}
+
+.scGetModelPMF <- function(model){
+  if (model[["type"]] == "point"){
+    s_range <- model[["pointPriorN"]]
+  }else{
+    s_min <- model[["minimum"]]
+    s_max <- model[["maximum"]]
+    s_range <- s_min:s_max
+  }
+
+  raw_probs <- switch(model[["type"]],
+                      "point"        = 1,
+                      "uniform"       = rep(1, length(s_range)),
+                      "poisson"       = dpois(s_range, lambda = model[["poissonlambda"]]),
+                      "negbino"       = dnbinom(s_range, size = model[["nbPhi"]], mu = model[["nbMu"]]))
+
+  if (sum(raw_probs) == 0)
+    return(NULL)
+
+  probs <- raw_probs / sum(raw_probs)
+
+  PMFlist <- list(s = s_range, p = probs)
+
+  return(PMFlist)
+}
+
+
+.scCalculateMean <- function(modelPMF){
+  s_vec <- modelPMF[["s"]]
+  p_vec <- modelPMF[["p"]]
+
+  meanMod <- 0
+
+  for (i in 1:length(s_vec)){
+    meanMod = meanMod + s_vec[i] * p_vec[i]
+  }
+
+
+  return(meanMod)
+}
+
+.scCalculateMode <- function(modelPMF){
+  s_vec <- modelPMF[["s"]]
+  p_vec <- modelPMF[["p"]]
+
+  mod_s <- s_vec[which.max(p_vec)]
+  return(mod_s[1])
+}
+
+.scCalculateMedian <- function(modelPMF){
+  s_vec <- modelPMF[["s"]]
+  p_vec <- modelPMF[["p"]]
+
+  cum_p <- cumsum(p_vec)
+  median_ind <- which(cum_p >= 0.5)[1]
+  return(s_vec[median_ind])
+}
+
+.scCalculateSD <- function(modelPMF){
+  s <- modelPMF[["s"]]
+  p <- modelPMF[["p"]]
+
+  mu <- sum(s * p)
+  variance <- sum((s - mu)^2 * p)
+  return(sqrt(variance))
+}
+
+.scCalculateProbability <- function(modelPMF, mincut, maxcut){
+  s_vec <- modelPMF[["s"]]
+  p_vec <- modelPMF[["p"]]
+
+  if (mincut > max(s_vec) || maxcut < min(s_vec)){
+    return(0)
+  }else{
+    cum_p <- sum(p_vec[s_vec >= mincut & s_vec <= maxcut])
+  }
+  return(cum_p)
+}
+
+
+
+
+
+
