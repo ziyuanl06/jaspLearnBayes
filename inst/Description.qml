@@ -105,15 +105,22 @@ Description
 
 	GroupTitle
 	{
-		title:  qsTr("Species Classification")
+		title:  qsTr("Biodiversity Estimation")
 		// icon:   "" // TODO: You need an icon
 	}
 
 	Analysis
 	{
-		title:  qsTr("Species Classification")
-		qml:    "LSSpeciesclassification.qml"
-		func:   "LSSpeciesclassification"
+		title:  qsTr("Biodiversity Estimation (Static)")
+		qml:    "LSBiodiversityestimationstatic.qml"
+		func:   "LSBiodiversityestimationstatic"
+	}
+
+	Analysis
+	{
+		title:  qsTr("Biodiversity Estimation (Full)")
+		qml:    "LSBiodiversityestimationfull.qml"
+		func:   "LSBiodiversityestimationfull"
 	}
 
 

@@ -17,6 +17,7 @@ Imports:
   MASS,
   MCMCpack,
   MGLM,
+  patchwork,
   scales,
   ggalluvial,
   ragg,

@@ -1153,7 +1153,7 @@
   if (!is.null(CI)) {
     yRange    <- c(0, max(c(yMax * 1.20), max(yBreaks)))
   } else {
-    yRange    <- c(0, max(c(yMax, max(yBreaks))))
+    yRange    <- c(0, max(c(yMax * 1.05, max(yBreaks))))
   }
 
   if (!is.null(allLines) & !is.null(allArrows)) {
@@ -1180,20 +1180,21 @@
   yBreaks <- jaspGraphs::getPrettyAxisBreaks(yRange)
   yRange  <- range(c(yRange, yBreaks))
 
-  return(ggplot2::scale_y_continuous(yName, limits = yRange, breaks = yBreaks))
+  return(ggplot2::scale_y_continuous(yName, limits = yRange, breaks = yBreaks,
+                                     expand = ggplot2::expansion(mult = c(0, 0.05))))
 }
 .plotThemePlus         <- function(allLines, allArrows) {
   if (!is.null(allLines) & !is.null(allArrows)) {
     return(
       ggplot2::theme(
         axis.title.y.right = ggplot2::element_text(vjust = 3),
-        plot.margin = ggplot2::margin(t = 3, r = 10, b = 0, l = 1))
+        plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
     )
   } else {
     return(
       ggplot2::theme(
         axis.title.y.right = ggplot2::element_text(vjust = 3.5),
-        plot.margin = ggplot2::margin(t = 3, r = 0, b = 0, l = 1))
+        plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
     )
   }
 }
