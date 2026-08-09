@@ -231,7 +231,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(priorBeliefContainer[["priorTable"]]))
     return()
 
-  priorTable <- createJaspTable(title = gettext("Prior Model Probabilities"))
+  priorTable <- createJaspTable(title = gettext("Prior probabilities"))
   priorTable$dependOn(c("priorType", "priorS1", "priorS2", "priorS3",
                         "priorDisplay"))
 
@@ -241,7 +241,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   if (options[["priorDisplay"]] == "numS") {
     priorTable$addColumnInfo(name = "hypName",       title = gettext("Hypothesis"),    type = "string")
-    priorTable$addColumnInfo(name = "s",             title = gettext("Number of Species"),    type = "integer")
+    priorTable$addColumnInfo(name = "s",             title = gettext("Species Count"),    type = "integer")
     priorTable$addColumnInfo(name = "priorPS",       title = gettext("Prior Probability"), type = "number")
 
     if (is.null(prior_vec)) {
@@ -265,7 +265,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   if (options[["priorDisplay"]] == "comb") {
     priorTable$addColumnInfo(name = "hypName",                 title = gettext("Hypothesis"),           type = "string")
-    priorTable$addColumnInfo(name = "s",                       title = gettext("Number of Species"),    type = "integer")
+    priorTable$addColumnInfo(name = "s",                       title = gettext("Species Count"),    type = "integer")
     priorTable$addColumnInfo(name = "namesS",        title = gettext("Names of Species"),     type = "string")
     priorTable$addColumnInfo(name = "priorPS",                 title = gettext("Prior Probability"), type = "number")
 
@@ -301,7 +301,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     return()
 
   priorPlot <- createJaspPlot(
-    title  = gettext("Prior Model Probabilities"),
+    title  = gettext("Prior probabilities"),
     width  = 480,
     height = 320)
   priorPlot$dependOn(c("priorType", "priorS1", "priorS2", "priorS3",
@@ -321,19 +321,23 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   if (options[["priorDisplay"]] == "numS") {
     hyp_sub <- c(1, 2, 3)
-    hyp_labels <- hyp_sub
+    hyp_labels <- sprintf("H[%d]", hyp_sub)
     plot_df <- data.frame(
       hypName = factor(hyp_labels, levels = hyp_labels),
       probability = prior_vec
     )
 
+    yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$probability)))
+    yMax    <- min(1, max(yBreaks))
+
     p <- ggplot2::ggplot(plot_df,
                          ggplot2::aes(x = hypName, y = probability)) +
       ggplot2::geom_col(fill = "#4DA3FF", width = 0.6) +
+      ggplot2::scale_x_discrete(labels = function(x) parse(text = x)) +
       ggplot2::scale_y_continuous(
-        limits = c(0, max(plot_df$probability) * 1.25),
+        limits = c(0, yMax),
         expand = ggplot2::expansion(mult = c(0, 0.08)),
-        breaks = scales::pretty_breaks(n = 5)
+        breaks = yBreaks[yBreaks <= yMax]
       )  +
       ggplot2::labs(
         x = gettext("Hypothesis (number of species)"),
@@ -349,6 +353,8 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     plot_df <- prior_df
     plot_df$hyp_name <- factor(hyp_labels, levels = hyp_labels)
 
+    yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$prior_prob)))
+    yMax    <- min(1, max(yBreaks))
 
     p <- ggplot2::ggplot(plot_df,
                          ggplot2::aes(x = hyp_name, y = prior_prob, fill = factor(s))) +
@@ -359,9 +365,9 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
         values = c("3" = "#9CC9F2", "2" = "#4DA3FF", "1" = "#1E5BB8")
       ) +
       ggplot2::scale_y_continuous(
-        limits = c(0, max(plot_df$prior_prob) * 1.2),
+        limits = c(0, yMax),
         expand = ggplot2::expansion(mult = c(0, 0.08)),
-        breaks = scales::pretty_breaks(n = 5)
+        breaks = yBreaks[yBreaks <= yMax]
       ) +
 
       ggplot2::labs(
@@ -525,7 +531,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     return()
 
   if (is.null(dataContainer[["dataTable"]])){
-    dataTable <- createJaspTable(title = gettext("Sampled Data"))
+    dataTable <- createJaspTable(title = gettext("Sampled data"))
     dataTable$dependOn(c("resetTrigger", "sampleTrigger"))
 
     sampleDataList <- sampleDataState$object
@@ -536,7 +542,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
     dataTable$addColumnInfo(name = "species",       title = gettext("Species"),           type = "string")
     dataTable$addColumnInfo(name = "old",           title = gettext("Previous Samples"),    type = "integer")
-    dataTable$addColumnInfo(name = "new",        title = gettext("This Sample"),     type = "integer")
+    dataTable$addColumnInfo(name = "new",        title = gettext("Current Sample"),     type = "integer")
     dataTable$addColumnInfo(name = "total",      title = gettext("Total"), type = "integer")
 
     for (i in seq_len(nrow(sample_df))) {
@@ -663,7 +669,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   likelihoodList <- likelihoodState$object
 
-  likelihoodTable <- createJaspTable(title = gettext("Likelihood Table"))
+  likelihoodTable <- createJaspTable(title = gettext("Likelihood table"))
   likelihoodTable$dependOn(c("resetTrigger", "sampleTrigger","likelihoodTable",
                              "likelihoodTableDisplay","likelihoodTableValue",
                              "likelihoodTableHide"))
@@ -715,7 +721,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
 
   likelihoodTable$addColumnInfo(name = "hypName", title = gettext("Hypothesis"),       type = "string")
-  likelihoodTable$addColumnInfo(name = "s",       title = gettext("Number of Species"), type = "integer")
+  likelihoodTable$addColumnInfo(name = "s",       title = gettext("Species Count"), type = "integer")
   if (options[["likelihoodTableDisplay"]] == "comb")
     likelihoodTable$addColumnInfo(name = "spe",   title = gettext("Species"),           type = "string")
 
@@ -806,13 +812,16 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   ymax <- max(plot_df$yval, na.rm = TRUE)
   if (!is.finite(ymax) || ymax <= 0) ymax <- 1
 
+  yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, ymax))
+  yMax    <- min(1, max(yBreaks))
+
   if (options[["likelihoodPlotDisplay"]] == "numS") {
     p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = hyp, y = yval)) +
       ggplot2::geom_col(width = 0.6, fill = "#4DA3FF") +
       ggplot2::scale_x_discrete(labels = function(l) parse(text = l)) +
-      ggplot2::scale_y_continuous(limits = c(0, ymax * 1.25),
+      ggplot2::scale_y_continuous(limits = c(0, yMax),
                                   expand = ggplot2::expansion(mult = c(0, 0.08)),
-                                  breaks = scales::pretty_breaks(n = 5)) +
+                                  breaks = yBreaks[yBreaks <= yMax]) +
       ggplot2::labs(x = gettext("Hypothesis (number of species)"),
                     y = gettext("Likelihood")) +
       jaspGraphs::geom_rangeframe() +
@@ -826,9 +835,9 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
         name   = gettext("Number of species"),
         values = c("1" = "#1E5BB8", "2" = "#4DA3FF", "3" = "#9CC9F2")
       ) +
-      ggplot2::scale_y_continuous(limits = c(0, ymax * 1.25),
+      ggplot2::scale_y_continuous(limits = c(0, yMax),
                                   expand = ggplot2::expansion(mult = c(0, 0.08)),
-                                  breaks = scales::pretty_breaks(n = 5)) +
+                                  breaks = yBreaks[yBreaks <= yMax]) +
       ggplot2::labs(x = gettext("Hypothesis (species combination)"),
                     y = gettext("Likelihood")) +
       jaspGraphs::geom_rangeframe() +
@@ -1001,7 +1010,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(posteriorContainer[["posteriorTable"]]))
     return()
 
-  posteriorTable <- createJaspTable(title = gettext("Prior and Posterior Table"))
+  posteriorTable <- createJaspTable(title = gettext("Prior and posterior table"))
   posteriorTable$dependOn(c("priorType", "priorS1", "priorS2", "priorS3",
                             "resetTrigger", "sampleTrigger",
                             "beliefUpdateTable", "bfUpdateTableDisp",
@@ -1019,7 +1028,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   posteriorRes <- .computePosterior(jaspResults, options)
 
   posteriorTable$addColumnInfo(name = "hypName", title = gettext("Hypothesis"), type = "string")
-  posteriorTable$addColumnInfo(name = "s", title = gettext("Number of Species"), type = "integer")
+  posteriorTable$addColumnInfo(name = "s", title = gettext("Species Count"), type = "integer")
 
 
 
@@ -1074,7 +1083,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(posteriorContainer[["posteriorPlot"]]))
     return()
 
-  posteriorPlot <- createJaspPlot(title = gettext("Prior and Posterior Plot"),
+  posteriorPlot <- createJaspPlot(title = gettext("Prior and posterior plot"),
                                   width = 480,
                                   height = 320)
 
@@ -1110,12 +1119,13 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   plot_df$hyp <- factor(plot_df$hyp, levels = table_df$hyp)
 
   yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$prob)))
+  yMax    <- min(1, max(yBreaks))
 
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = hyp, y = prob, fill = type)) +
     ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.8), width = 0.7) +
     ggplot2::scale_x_discrete(labels = function(l) parse(text = l)) +     # 解析 plotmath
     ggplot2::scale_y_continuous(name = gettext("Probability"),
-                                breaks = yBreaks, limits = range(yBreaks),
+                                breaks = yBreaks[yBreaks <= yMax], limits = c(0, yMax),
                                 expand = ggplot2::expansion(mult = c(0, 0.08))) +
     ggplot2::scale_fill_manual(name = NULL,
                                values = c("Prior" = "#B0B0B0", "Posterior" = "#4DA3FF")) +
@@ -1144,7 +1154,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(posteriorContainer[["evidencePlot"]]))
     return()
 
-  evidencePlot <- createJaspPlot(title = gettext("Evidence Accumulation"),
+  evidencePlot <- createJaspPlot(title = gettext("Evidence accumulation"),
                                   width = 480,
                                   height = 320)
 
@@ -1261,7 +1271,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(posteriorContainer[["posteriorCompTable"]]))
     return()
 
-  compTable <- createJaspTable(title = gettext("Posterior Comparison Table"))
+  compTable <- createJaspTable(title = gettext("Posterior comparison table"))
   compTable$dependOn(c("priorType", "priorS1", "priorS2", "priorS3",
                             "resetTrigger", "sampleTrigger",
                             "compPostTable", "compPostHyp",
@@ -1312,7 +1322,6 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     return()
   }
 
-  compTable$addColumnInfo(name = "compName", title = gettext("Comparison"), type = "integer")
   compTable$addColumnInfo(name = "hypA", title = gettext("Hypothesis 1"), type = "string")
   compTable$addColumnInfo(name = "hypB", title = gettext("Hypothesis 2"), type = "string")
   compTable$addColumnInfo(name = "priorOdds", title = gettext("Prior odds"), type = "number")
@@ -1351,7 +1360,6 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
     
     row_list <- list(
-      compName = comp_i,
       hypA = hyp1_name,
       hypB = hyp2_name,
       priorOdds = prior_odds,
@@ -1636,7 +1644,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(predContainer[["predTable"]]))
     return()
   
-  predTable <- createJaspTable(title = gettext("Posterior Prediction Table"))
+  predTable <- createJaspTable(title = gettext("Posterior prediction table"))
   predTable$dependOn(c("priorType", "priorS1", "priorS2", "priorS3",
                             "resetTrigger", "sampleTrigger",
                             "postPredTable", "postPredTableTyp",
@@ -1744,7 +1752,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   # ── Column definitions ────────────────────────────────────────────
   predTable$addColumnInfo(name = "hyp",       title = gettext("Hypothesis"),        type = "string")
-  predTable$addColumnInfo(name = "s",         title = gettext("Number of Species"), type = "integer")
+  predTable$addColumnInfo(name = "s",         title = gettext("Species Count"), type = "integer")
   if (!is_numS)
     predTable$addColumnInfo(name = "speName", title = gettext("Species"),           type = "string")
   predTable$addColumnInfo(name = "posterior", title = gettext("Posterior"),         type = "number")
@@ -1822,7 +1830,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(predContainer[["predPlot"]]))
     return()
 
-  predPlot <- createJaspPlot(title  = gettext("Posterior Predictive Plot"),
+  predPlot <- createJaspPlot(title  = gettext("Posterior predictive plot"),
                               width  = 480,
                               height = 320)
   predPlot$dependOn(c("priorType", "priorS1", "priorS2", "priorS3",
@@ -1901,13 +1909,14 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   }
 
   yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$prob, na.rm = TRUE)))
+  yMax    <- min(1, max(yBreaks))
 
   p <- ggplot2::ggplot(plot_df,
                        ggplot2::aes(x = x, y = prob, fill = type)) +
     ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.8), width = 0.7) +
     ggplot2::scale_y_continuous(name   = gettext("Predictive Probability"),
-                                breaks = yBreaks,
-                                limits = range(yBreaks),
+                                breaks = yBreaks[yBreaks <= yMax],
+                                limits = c(0, yMax),
                                 expand = ggplot2::expansion(mult = c(0, 0.08))) +
     ggplot2::scale_fill_manual(name   = NULL,
                                values = c("Prior"     = "#B0B0B0",
@@ -1933,7 +1942,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     return()
 
   predChangePlot <- createJaspPlot(
-    title  = gettext("Predictive Change Plot"),
+    title  = gettext("Predictive change plot"),
     width  = 480,
     height = 320
   )

@@ -77,7 +77,7 @@ Form
 
                     Label
                     {
-                        text: qsTr("Hypothetical Number of Species (S)")
+                        text: qsTr("Hypothetical Species count (S)")
                         Layout.preferredWidth: 255
                     }
 
@@ -145,7 +145,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Number of species"),                value: "numS"},
+                            { label: qsTr("Species count"),                value: "numS"},
                             { label: qsTr("Species combination"),              value: "comb"},
                         ]
                     }
@@ -244,7 +244,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Number of species"),                value: "numS"},
+                            { label: qsTr("Species count"),                value: "numS"},
                             { label: qsTr("Species combination"),              value: "comb"},
                         ]
                 }
@@ -287,7 +287,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Number of species"),                value: "numS"},
+                            { label: qsTr("Species count"),                value: "numS"},
                             { label: qsTr("Species combination"),              value: "comb"},
                         ]
                 }
@@ -337,7 +337,7 @@ Form
                 fieldWidth:			 130 * preferencesModel.uiScale
                 values:
                     [
-                        { label: qsTr("Number of species"),                value: "numS"},
+                        { label: qsTr("Species count"),                value: "numS"},
                         { label: qsTr("Species combination"),              value: "comb"},
                     ]
             }
@@ -347,6 +347,7 @@ Form
                 visible: bFDisplay.value == "numS" && showBF.checked
 
                 preferredHeight: 150 * preferencesModel.uiScale
+                preferredWidth:  550 * preferencesModel.uiScale
 
                 AvailableVariablesList
                 {
@@ -370,6 +371,7 @@ Form
                 visible: bFDisplay.value == "comb" && showBF.checked
 
                 preferredHeight: 150 * preferencesModel.uiScale
+                preferredWidth:  550 * preferencesModel.uiScale
 
                 AvailableVariablesList
                 {
@@ -438,7 +440,7 @@ Form
                         fieldWidth:			 130 * preferencesModel.uiScale
                         values:
                             [
-                                { label: qsTr("Number of species"),                value: "numS"},
+                                { label: qsTr("Species count"),                value: "numS"},
                                 { label: qsTr("Species combination"),              value: "comb"},
                             ]
                     }
@@ -483,7 +485,7 @@ Form
                         fieldWidth:			 130 * preferencesModel.uiScale
                         values:
                             [
-                                { label: qsTr("Number of species"),                value: "numS"},
+                                { label: qsTr("Species count"),                value: "numS"},
                                 { label: qsTr("Species combination"),              value: "comb"},
                             ]
                     }
@@ -534,7 +536,7 @@ Form
                         fieldWidth:			 130 * preferencesModel.uiScale
                         values:
                             [
-                                { label: qsTr("Number of species"),                value: "numS"},
+                                { label: qsTr("Species count"),                value: "numS"},
                                 { label: qsTr("Species combination"),              value: "comb"},
                             ]
                     }
@@ -545,7 +547,8 @@ Form
                     {
                         visible: eviPlotHyp.value == "numS" && evidPlot.checked
                         preferredHeight: 150 * preferencesModel.uiScale
-                        AvailableVariablesList 
+                        preferredWidth:  550 * preferencesModel.uiScale
+                        AvailableVariablesList
                         {
                             name:   "eviAvailNumS"
                             values: [
@@ -567,6 +570,7 @@ Form
                         visible: eviPlotHyp.value== "comb" && evidPlot.checked
 
                         preferredHeight: 150 * preferencesModel.uiScale
+                        preferredWidth:  550 * preferencesModel.uiScale
 
                         AvailableVariablesList
                         {
@@ -630,7 +634,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Number of species"),                value: "numS"},
+                            { label: qsTr("Species count"),                value: "numS"},
                             { label: qsTr("Species combination"),              value: "comb"},
                         ]
                 
@@ -654,6 +658,7 @@ Form
                 {
                     visible: compPostHyp.value == "numS" && (compPostTable.checked || compPostPlot.checked)
                     preferredHeight: 150 * preferencesModel.uiScale
+                    preferredWidth:  550 * preferencesModel.uiScale
                     AvailableVariablesList
                     {
                         name:   "compPostAvailNumS"
@@ -674,6 +679,7 @@ Form
                 {
                     visible: compPostHyp.value== "comb" && (compPostTable.checked || compPostPlot.checked)
                     preferredHeight: 150 * preferencesModel.uiScale
+                    preferredWidth:  550 * preferencesModel.uiScale
                     AvailableVariablesList
                     {
                         name:   "compPostAvailComb"
@@ -746,7 +752,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Number of species"),                value: "numS"},
+                            { label: qsTr("Species count"),                value: "numS"},
                             { label: qsTr("Species combination"),              value: "comb"},
                         ]
                 }

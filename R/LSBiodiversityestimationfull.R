@@ -37,9 +37,6 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
   if (is.null(jaspResults[["dataContainer"]]))
     .befCreateDataContainer(jaspResults, options)
 
-  if (!isFALSE(options[["dataExpText"]]))
-    .befDisplayDataExp(jaspResults, options)
-
   .befCreateIsland(jaspResults, options)
   if (should_sample)
     .befUpdateSample(jaspResults, options)
@@ -143,27 +140,6 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     dataContainer <- createJaspContainer(title = gettext("Data"))
     dataContainer$dependOn(c("resetSample"))
     jaspResults[["dataContainer"]] <- dataContainer
-  }
-
-  .befDisplayDataExp <- function(jaspResults, options) {
-    dataContainer <- jaspResults[["dataContainer"]]
-    if (is.null(dataContainer))
-      return()
-
-    if (!is.null(dataContainer[["dataIntroText"]]))
-      return()
-
-    text <- gettext("Explain data here...")
-
-    introHtml <- createJaspHtml(
-      title    = gettext("Explanation of Data"),
-      text     = text,
-      position = 1
-    )
-    introHtml$dependOn("dataExpText")
-
-    dataContainer[["dataIntroText"]] <- introHtml
-
   }
 
   .befCreateIsland <- function(jaspResults, options) {
@@ -280,7 +256,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     )
     clean_df <- clean_df[order(clean_df$total, decreasing = TRUE), ]
 
-    batchTable <- createJaspTable(title = gettext("The Current Batch (Identity-Aware)"))
+    batchTable <- createJaspTable(title = gettext("The current batch (identity-aware)"))
     batchTable$dependOn(c("redrawTrigger", "resetSample"))
 
     batchTable$addColumnInfo(name = "species", title = gettext("Species"),           type = "string")
@@ -336,7 +312,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     )
     all_counts <- all_counts[order(all_counts$Freq, decreasing = TRUE), ]
 
-    allTable <- createJaspTable(title = gettext("The Whole Sample (Unique Individuals)"))
+    allTable <- createJaspTable(title = gettext("The whole sample (unique individuals)"))
     allTable$dependOn(c("redrawTrigger", "resetSample"))
 
     allTable$addColumnInfo(name = "species", title = gettext("Species"),               type = "string")
@@ -390,12 +366,19 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     )
     plot_data$Species <- factor(plot_data$Species, levels = rev(clean_df$species))
 
+    yMax <- max(clean_df$total, na.rm = TRUE)
+    if (!is.finite(yMax) || yMax <= 0) yMax <- 1
+    yBreaks <- scales::breaks_pretty()(c(0, yMax))
+    yBreaks <- yBreaks[yBreaks == floor(yBreaks)]
+    yUpper  <- max(yBreaks)
+
     p <- ggplot2::ggplot(plot_data, ggplot2::aes(x = Species, y = Count, fill = Type)) +
       ggplot2::geom_bar(stat = "identity", width = 0.7) +
       ggplot2::scale_fill_manual(values = c("New (First-time)" = "#3498db",
                                             "Old (Re-captured)" = "#95a5a6")) +
       ggplot2::scale_y_continuous(
-        breaks = function(x) { b <- scales::breaks_pretty()(x); b[b == floor(b)] },
+        limits = c(0, yUpper),
+        breaks = yBreaks,
         expand = ggplot2::expansion(mult = c(0, 0.08))
       ) +
       ggplot2::coord_flip() +
@@ -405,7 +388,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw()
 
-    batchPlot <- createJaspPlot(title = gettext("Species Frequencies (Current Batch)"),
+    batchPlot <- createJaspPlot(title = gettext("Species frequencies (current batch)"),
                                 width = 600, height = max(320, 60 + 26 * nrow(clean_df)))
     batchPlot$dependOn(c("barBatch", "redrawTrigger", "resetSample"))
     batchPlot$plotObject <- p
@@ -433,7 +416,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     unique_individuals_df <- full_df[!duplicated(full_df$id), ]
     n_species             <- length(unique(unique_individuals_df$species))
 
-    allPlot <- createJaspPlot(title = gettext("Species Frequencies (Overall)"),
+    allPlot <- createJaspPlot(title = gettext("Species frequencies (overall)"),
                               width = 600, height = max(320, 60 + 26 * n_species))
     allPlot$dependOn(c("barAllSample", "redrawTrigger", "resetSample"))
     allPlot$plotObject <- .befFillDataBarPlot(as.character(unique_individuals_df$species))
@@ -525,7 +508,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (!is.null(modelContainer[["priorSumTable"]]))
       return()
 
-    priorSumTable <- createJaspTable(title = gettext("Prior Summary Statistics"))
+    priorSumTable <- createJaspTable(title = gettext("Prior summary statistics"))
     priorSumTable$dependOn(c("priorMean", "priorMedian", "priorMode",
                             "priorSD", "variableBetween", "priorUserMin", "priorUserMax"))
 
@@ -580,19 +563,25 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       return()
 
     mPMF  <- .befGetModelPMF(m)
-    pPlot <- createJaspPlot(title = gettext("Prior Distribution"),
+    pPlot <- createJaspPlot(title = gettext("Prior distribution"),
                             width = 450, height = 300)
     pPlot$dependOn(.befModelDepends)
 
     dfPMF   <- data.frame(s = mPMF[["s"]], p = mPMF[["p"]])
     s_min   <- min(dfPMF[["s"]])
     s_max   <- max(dfPMF[["s"]])
+
+    yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(dfPMF[["p"]], na.rm = TRUE)))
+    yMax    <- min(1, max(yBreaks))
+
     plotObj <- ggplot2::ggplot(dfPMF, ggplot2::aes(x = s, y = p)) +
       ggplot2::geom_bar(stat = "identity", fill = "#4DA3FF", width = 0.7) +
-      ggplot2::labs(x = gettext("Number of Species (S)"), y = gettext("Prior Probability")) +
+      ggplot2::labs(x = gettext("Species Count (S)"), y = gettext("Prior Probability")) +
       ggplot2::scale_x_continuous(limits = c(s_min - 0.5, s_max + 0.5), breaks = s_min:s_max,
                                   expand = ggplot2::expansion(mult = c(0.02, 0.02))) +
-      ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.08))) +
+      ggplot2::scale_y_continuous(limits = c(0, yMax),
+                                  breaks = yBreaks[yBreaks <= yMax],
+                                  expand = ggplot2::expansion(mult = c(0, 0.08))) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
       ggplot2::theme(plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
@@ -764,7 +753,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (!is.null(abundanceContainer[["abundanceTable"]]))
       return()
 
-    abundanceTable <- createJaspTable(title = "Estimated Species Abundance")
+    abundanceTable <- createJaspTable(title = "Estimated species abundance")
     abundanceTable$dependOn(c("redrawTrigger", "resetSample", "despAbundanceTable", "abundanceStat"))
     abundanceTable$addColumnInfo(name = "s_label", title = "Hypothetical S", type = "string")
 
@@ -900,6 +889,9 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       if (nrow(subset_df) == 0)
         next
 
+      yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(subset_df$mean, na.rm = TRUE)))
+      yMax    <- min(1, max(yBreaks))
+
       p <- ggplot2::ggplot(subset_df,
                           ggplot2::aes(x = batch, y = mean, color = Species, group = Species)) +
         ggplot2::geom_line(linewidth = 0.8) +
@@ -908,7 +900,9 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
           b <- scales::pretty_breaks(n = 6)(x)
           b[b == floor(b) & b >= 1]
         }) +
-        ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.1))) +
+        ggplot2::scale_y_continuous(limits = c(0, yMax),
+                                    breaks = yBreaks[yBreaks <= yMax],
+                                    expand = ggplot2::expansion(mult = c(0, 0.1))) +
         ggplot2::labs(
           x     = gettext("Batch"),
           y     = gettext("Mean Abundance Estimate"),
@@ -919,7 +913,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         ggplot2::theme(plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
 
       trajPlot <- createJaspPlot(
-        title  = gettextf("Abundance Trajectory (S = %d)", s_val),
+        title  = gettextf("Abundance trajectory (S = %d)", s_val),
         width  = 500,
         height = 350
       )
@@ -1049,7 +1043,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     like_df <- bioLikeState_j$object$likeDF
     batch_count <- bioLikeState_j$object$batch_count
 
-    likeTable <- createJaspTable(title = gettext("Biodiversity Likelihood"))
+    likeTable <- createJaspTable(title = gettext("Biodiversity likelihood"))
     likeTable$dependOn(c("redrawTrigger", "resetSample",
                           "bioLikeTable", "bioLikeTableDisp", "bioLikeTableHide"))
 
@@ -1203,11 +1197,11 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     stat     <- options[["beliefUpdateTableStat"]]
     hide_imp <- !isFALSE(options[["beliefUpdateTableHide"]])
 
-    beliefTable <- createJaspTable(title = gettext("Belief Update"))
+    beliefTable <- createJaspTable(title = gettext("Belief update"))
     beliefTable$dependOn(c("resetSample",
                             "beliefUpdateTable", "beliefUpdateTableStat",
                             "beliefUpdateTableHide"))
-    beliefTable$addColumnInfo(name = "S",             title = gettext("Number of Species"), type = "integer")
+    beliefTable$addColumnInfo(name = "S",             title = gettext("Species Count"), type = "integer")
     beliefTable$addColumnInfo(name = "prior",         title = gettext("Prior"),              type = "number")
     beliefTable$addColumnInfo(name = "likelihood",    title = gettext("Likelihood"),         type = "number")
     beliefTable$addColumnInfo(name = "raw_posterior", title = gettext("Prior × Likelihood"), type = "number")
@@ -1306,7 +1300,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     stat     <- options[["beliefUpdatePlotStat"]]
     hide_imp <- !isFALSE(options[["beliefUpdatePlotHide"]])
 
-    postPlot <- createJaspPlot(title = gettext("Prior and Posterior Plot"),
+    postPlot <- createJaspPlot(title = gettext("Prior and posterior plot"),
                                width = 500, height = 400)
     postPlot$dependOn(c("resetSample",
                          "beliefUpdatePlot", "beliefUpdatePlotStat",
@@ -1384,7 +1378,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         limits = c(0, y_upper),
         expand = ggplot2::expansion(mult = c(0, 0.08))
       ) +
-      ggplot2::labs(x = gettext("Number of Species"), y = gettext("Probability")) +
+      ggplot2::labs(x = gettext("Species Count"), y = gettext("Probability")) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
       ggplot2::theme(legend.position = "right",
@@ -1402,7 +1396,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (length(selected) == 0)
       return()
 
-    evidPlot <- createJaspPlot(title = gettext("Evidence Accumulation"),
+    evidPlot <- createJaspPlot(title = gettext("Evidence accumulation"),
                                width = 550, height = 400)
     evidPlot$dependOn(c("resetSample", "evidAccPlot",
                          "evidAccSelected", .befModelDepends))
@@ -1503,7 +1497,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       ggplot2::labs(
         x     = gettext("Unique Individuals Observed"),
         y     = gettext("Posterior Probability"),
-        color = gettext("Number of Species")
+        color = gettext("Species Count")
       ) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -1580,11 +1574,10 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     }
 
     if (!isFALSE(options[["compPostTable"]])) {
-      compTable <- createJaspTable(title = gettext("Posterior Comparison Table"))
+      compTable <- createJaspTable(title = gettext("Posterior comparison table"))
       compTable$dependOn(c("resetSample",
                             "compPostTable", "compPostStat", "compPostPairs",
                             .befModelDepends))
-      compTable$addColumnInfo(name = "comp",       title = gettext("Comparison"),          type = "integer")
       compTable$addColumnInfo(name = "hyp1",       title = gettext("Hypothesis 1"),        type = "string")
       compTable$addColumnInfo(name = "hyp2",       title = gettext("Hypothesis 2"),        type = "string")
       compTable$addColumnInfo(name = "prior_odds", title = gettext("Prior odds"),           type = "number")
@@ -1631,7 +1624,6 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         }
 
         compTable$addRows(list(
-          comp       = comp_i,
           hyp1       = paste0("H", subscripts[sA]),
           hyp2       = paste0("H", subscripts[sB]),
           prior_odds = prior_odds,
@@ -1650,7 +1642,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     stat <- options[["margAbundanceStat"]]
     if (is.null(stat)) stat <- "mean"
 
-    margTable <- createJaspTable(title = gettext("Species Abundance Table"))
+    margTable <- createJaspTable(title = gettext("Species abundance table"))
     margTable$dependOn(c("resetSample",
                           "margAbundanceTable", "margAbundanceStat",
                           .befModelDepends))
@@ -1742,7 +1734,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (is.null(bioPostContainer))
       return()
 
-    margPlot <- createJaspPlot(title = gettext("Species Abundance Plot"),
+    margPlot <- createJaspPlot(title = gettext("Species abundance plot"),
                                width = 550, height = 400)
     margPlot$dependOn(c("resetSample",
                          "margAbundancePlot", "margAbundanceStat",
@@ -1900,7 +1892,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
     predType <- options[["predTableTyp"]]
 
-    predTable <- createJaspTable(title = gettext("Posterior Prediction"))
+    predTable <- createJaspTable(title = gettext("Posterior prediction"))
     predTable$dependOn(c("resetSample", "predTable", "predTableTyp",
                           .befModelDepends))
 
@@ -2023,7 +2015,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
     predType <- options[["predPlotTyp"]]
 
-    predPlot <- createJaspPlot(title = gettext("Posterior Prediction"),
+    predPlot <- createJaspPlot(title = gettext("Posterior prediction"),
                                width = 550, height = 400)
     predPlot$dependOn(c("resetSample", "predPlot", "predPlotTyp",
                           .befModelDepends))
@@ -2123,11 +2115,16 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
       predPlot$height <- max(400, 60 + 26 * nlevels(plot_df$species))
 
+      yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$probability, na.rm = TRUE)))
+      yMax    <- min(1, max(yBreaks))
+
       p <- ggplot2::ggplot(plot_df,
                            ggplot2::aes(x = species, y = probability, fill = is_unknown)) +
         ggplot2::geom_bar(stat = "identity", width = 0.6) +
         ggplot2::scale_fill_manual(values = c("FALSE" = "#4DA3FF", "TRUE" = "#95a5a6")) +
         ggplot2::scale_y_continuous(
+          limits = c(0, yMax),
+          breaks = yBreaks[yBreaks <= yMax],
           expand = ggplot2::expansion(mult = c(0, 0.08))
         ) +
         ggplot2::coord_flip() +
@@ -2177,6 +2174,9 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       plot_df$category <- factor(plot_df$category,
                                   levels = c(gettext("Seen species"), gettext("Unseen species")))
 
+      yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$value, na.rm = TRUE)))
+      yMax    <- min(1, max(yBreaks))
+
       p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = category, y = value, fill = category)) +
         ggplot2::geom_bar(stat = "identity", width = 0.5) +
         ggplot2::scale_fill_manual(values = setNames(
@@ -2184,6 +2184,8 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
           levels(plot_df$category)
         )) +
         ggplot2::scale_y_continuous(
+          limits = c(0, yMax),
+          breaks = yBreaks[yBreaks <= yMax],
           expand = ggplot2::expansion(mult = c(0, 0.08))
         ) +
         ggplot2::labs(x = "", y = gettext("Predictive probability")) +
@@ -2204,10 +2206,17 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       colnames(df) <- c("Species", "Count")
       df$Species <- reorder(df$Species, df$Count)
 
+      yMax <- max(df$Count, na.rm = TRUE)
+      if (!is.finite(yMax) || yMax <= 0) yMax <- 1
+      yBreaks <- scales::breaks_pretty()(c(0, yMax))
+      yBreaks <- yBreaks[yBreaks == floor(yBreaks)]
+      yUpper  <- max(yBreaks)
+
       p <- ggplot2::ggplot(df, ggplot2::aes(x = Species, y = Count)) +
         ggplot2::geom_bar(stat = "identity", fill = "#4DA3FF", color = "#4DA3FF", width = 0.7) +
         ggplot2::scale_y_continuous(
-          breaks = function(x) { b <- scales::breaks_pretty()(x); b[b == floor(b)] },
+          limits = c(0, yUpper),
+          breaks = yBreaks,
           expand = ggplot2::expansion(mult = c(0, 0.08))
         ) +
         ggplot2::coord_flip() +

@@ -31,13 +31,6 @@ Form
         expanded: true
         title: qsTr("Prior Beliefs")
 
-        CheckBox 
-        {
-            name:    "priorExpText"
-            label:   qsTr("Explanatory text")
-            checked: false
-        }
-
         Group
         {
             title: qsTr("Model")
@@ -244,14 +237,6 @@ Form
         expanded: true
         title: qsTr("Data")
 
-        CheckBox
-        {
-            name:    "dataExpText"
-            label:   qsTr("Explanatory text")
-            checked: false
-        }
-
-
         Group
         {
             visible: inputType.value === "randsamp"
@@ -351,13 +336,6 @@ Form
         title: qsTr("Abundance")
         columns: 1
 
-        CheckBox 
-        {
-            name:    "abunExpText"
-            label:   qsTr("Explanatory text")
-            checked: false
-        }
-
         Group{
             title: qsTr("Species abundance")
             name: "speAbundOptions"
@@ -408,13 +386,6 @@ Form
         expanded: false
         title: qsTr("Biodiversity Likelihood")
         columns: 1
-
-        CheckBox 
-        {
-            name:    "bioLikeExpText"
-            label:   qsTr("Explanatory text")
-            checked: false
-        }
 
         CheckBox
         {
@@ -502,13 +473,6 @@ Form
         expanded: false
         title: qsTr("Biodiversity Posterior")
         columns: 1
-
-        CheckBox
-        {
-            name:    "bioPostExpText"
-            label:   qsTr("Explanatory text")
-            checked: false
-        }
 
         Group
         {
@@ -728,13 +692,6 @@ Form
         expanded: false
         title: qsTr("Posterior Prediction")
         columns: 1
-
-        CheckBox
-        {
-            name:    "predExpText"
-            label:   qsTr("Explanatory text")
-            checked: false
-        }
 
         Group
         {
