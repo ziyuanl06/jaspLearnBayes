@@ -29,7 +29,7 @@ Form
     Section
     {
         expanded: true
-        title: qsTr("Prior Beliefs")
+        title: qsTr("Prior Belief")
 
         Group
         {
