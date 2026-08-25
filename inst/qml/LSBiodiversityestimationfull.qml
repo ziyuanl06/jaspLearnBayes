@@ -316,7 +316,7 @@ Form
                 CheckBox
                 {
                     name: "barBatch"
-                    label: qsTr("The current batch")
+                    label: qsTr("The current sample")
                     checked: false
                 }
 
@@ -377,6 +377,12 @@ Form
                     label: qsTr("Display estimates")
                     checked: false
                 }
+
+                CheckBox {
+                    name: "despAbundancePlotSameScale"
+                    label: qsTr("Enforce same scale")
+                    checked: false
+                }
             }
         }
     }
@@ -384,7 +390,7 @@ Form
     Section 
     {
         expanded: false
-        title: qsTr("Biodiversity Likelihood")
+        title: qsTr("Likelihood")
         columns: 1
 
         CheckBox
@@ -471,12 +477,12 @@ Form
     Section
     {
         expanded: false
-        title: qsTr("Biodiversity Posterior")
+        title: qsTr("Posterior Belief")
         columns: 1
 
         Group
         {
-            title:   qsTr("Prior and posterior")
+            title:   qsTr("Species count")
             columns: 1
 
             Group

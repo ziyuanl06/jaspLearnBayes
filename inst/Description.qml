@@ -106,7 +106,7 @@ Description
 	GroupTitle
 	{
 		title:  qsTr("Biodiversity Estimation")
-		// icon:   "" // TODO: You need an icon
+		icon:	"biodiversity-estimation.svg"
 	}
 
 	Analysis

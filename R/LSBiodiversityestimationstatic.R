@@ -148,10 +148,13 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(jaspResults[["introductoryText"]]))
     return()
 
-  text <- gettextf('You need an explanation here...') #TODO
+  text <- gettextf("<p> In this module, you will play the role of a <b>biologist</b> who has just arrived on a <b>fictional island</b>, and your main task is to find out how many different species live there.</p>
+                  <p>There are a few rules to follow along the way. First, you will make a <b>guess</b> about how many different species there might be. Then, you will <b>observe animals one at a time</b> and <b>update your belief</b> accordingly, in a completely logical way.</p>
+                  <p>Excited? Let's dive into the sections below and get started! If you ever feel lost, just tick <i>Explanatory text</i> in each section for extra guidance.</p>
+                  <p>Have fun, and your adventure begins here!</p>")
 
   jaspResults[["introductoryText"]] <- createJaspHtml(
-    title        = gettext("Welcome to Species Classification with JASP!"),
+    title        = gettext("Welcome!"),
     text         = text,
     dependencies = "introductoryText",
     position     = 1
@@ -184,7 +187,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
                   <p>You can also switch the display to <b>Species combination</b> to see the hypotheses split into actual species combinations (like \"cat + horse\") instead of just a count. Tick <b>Display prior plot</b> to see your beliefs as a bar chart!</p>")
 
   introHtml <- createJaspHtml(
-    title    = gettext("Explanation of Model Prior"),
+    title    = gettext("Explanation of Prior Belief"),
     text     = text,
     position = 1
   )
@@ -340,8 +343,8 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
         breaks = yBreaks[yBreaks <= yMax]
       )  +
       ggplot2::labs(
-        x = gettext("Hypothesis (number of species)"),
-        y = gettext("Prior probability")
+        x = gettext("Hypothesis (Species Count)"),
+        y = gettext("Prior Probability")
       ) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -361,7 +364,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ggplot2::geom_col( width = 0.6) +
       ggplot2::scale_x_discrete(labels = function(x) parse(text = x)) +
       ggplot2::scale_fill_manual(
-        name   = gettext("Number of species"),
+        name   = gettext("Species Count"),
         values = c("3" = "#9CC9F2", "2" = "#4DA3FF", "1" = "#1E5BB8")
       ) +
       ggplot2::scale_y_continuous(
@@ -372,7 +375,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
       ggplot2::labs(
         x = gettext("Hypothesis (Species Combination)"),
-        y = gettext("Prior probability")
+        y = gettext("Prior Probability")
       ) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -581,11 +584,11 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
                   <p>In this section, you can see the likelihood of each hypothesis in a table and/or a plot. A couple of handy options:
                   <ul>
                     <li>Switch between <b>Number of species</b> and <b>Species combinations</b> to view hypotheses at different levels of detail.</li>
-                    <li>For the table, change the <b>Displayed value</b> <b>Log likelihood</b> — the numbers can get really tiny as observations pile up, so the log-scale makes them easier to read.</li>
+                    <li>For the table, change the <b>Displayed value</b> to <b>Log likelihood</b> — the numbers can get really tiny as observations pile up, so the log-scale makes them easier to read.</li>
                     <li>For the plot, choose to show the likelihood of the <b>most recent sample</b> or the <b>overall likelihood</b> of all samples so far.</li>
                   </ul></p>
-                  <p>Want to compare two hypotheses head-to-head? Tick the <b>Bayes factor</b> checkbox and drag hypotheses into the comparison panel. The Bayes factor is just the <i>ratio</i> of two likelihoods — it tells you how many times more likely the data is under one hypothesis compared to the other. We often visualise this with a <b>pizza plot</b>: the hypothesis that explains the data better takes up a bigger slice of the pizza. Imagine dipping your finger in — which topping would you expect to hit? That is exactly the intuition!</p>
-                  <p><b>Something to think about:</b> Which hypotheses tend to have a larger likelihood if there is only few species (let's say 1 or 2) in your sample? Can you figure out why?")
+                  <p>Want to compare two hypotheses head-to-head? Tick the <b>Bayes factor</b> checkbox and drag hypotheses into the comparison panel. The Bayes factor is just the <i>ratio</i> of two likelihoods — it tells you how many times more likely the data are under one hypothesis compared to the other. We often visualise this with a <b>pizza plot</b>: the hypothesis that explains the data better takes up a bigger slice of the pizza. Imagine dipping your finger in — which topping would you expect to hit? That is exactly the intuition!</p>
+                  <p><b>Something to think about:</b> Which hypotheses tend to have a larger likelihood if there are only a few species (let's say 1 or 2) in your sample? Can you figure out why?")
 
   introHtml <- createJaspHtml(
     title    = gettext("Explanation of Likelihood"),
@@ -822,7 +825,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ggplot2::scale_y_continuous(limits = c(0, yMax),
                                   expand = ggplot2::expansion(mult = c(0, 0.08)),
                                   breaks = yBreaks[yBreaks <= yMax]) +
-      ggplot2::labs(x = gettext("Hypothesis (number of species)"),
+      ggplot2::labs(x = gettext("Hypothesis (Species Count)"),
                     y = gettext("Likelihood")) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -832,13 +835,13 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ggplot2::geom_col(width = 0.6) +
       ggplot2::scale_x_discrete(labels = function(l) parse(text = l)) +
       ggplot2::scale_fill_manual(
-        name   = gettext("Number of species"),
+        name   = gettext("Species Count"),
         values = c("1" = "#1E5BB8", "2" = "#4DA3FF", "3" = "#9CC9F2")
       ) +
       ggplot2::scale_y_continuous(limits = c(0, yMax),
                                   expand = ggplot2::expansion(mult = c(0, 0.08)),
                                   breaks = yBreaks[yBreaks <= yMax]) +
-      ggplot2::labs(x = gettext("Hypothesis (species combination)"),
+      ggplot2::labs(x = gettext("Hypothesis (Species Combination)"),
                     y = gettext("Likelihood")) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -982,10 +985,21 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(posteriorContainer[["posteriorIntroText"]]))
     return()
 
-  text <- gettext("Explain posterior here...")
+  text <- gettext("<p>Great news! We have already evaluated how well different hypothetical species counts align with the data by calculating the likelihood, and you also have some initial beliefs about the species counts from before you set foot on this island. Now, your supervisor wants you to tell them what you believe now. So what should you do? Don't worry, because that is exactly what we are going to do in this <b>Posterior Belief</b> section!</p>
+                  <p>In Bayesian statistics, a central rule is that \"what we believe now is the product of what we believed before and what the data tell us\", or in other words, \"posterior equals prior times likelihood\". Think about your own life: have you ever had some expectation about something, until new information came in and you changed your mind? That is exactly what we are talking about!</p>
+                  <p>There are three features in this section: the belief update table and plot, the evidence accumulation plot, and compare hypotheses. Don't worry, we will explain them one by one.</p>
+                  <p>The first thing you will see is the belief update table and plot. They will appear right after you tick the respective checkbox — magic! To avoid getting lost, try to extract the following information: What did you believe initially? What did the data tell you? And what do you believe now? Yes, just like you may have noticed, hypotheses that predict the data well gain in probability, while those that predict the data poorly lose in probability. If you push yourself a little further, you will find that the posterior is simply the normalised product of the prior and the likelihood. A few options you can change in the table and plot:</p>
+                  <ul>
+                    <li>Switch between <b>Number of species</b> and <b>Species combinations</b> to view hypotheses at different levels of detail.</li>
+                    <li>Switch between <b>Last sample</b> and <b>Overall/Initial</b> to select what to focus on: the current sample only, or all samples combined.</li>
+                    <li>Tick <b>Hide impossible hypotheses</b> to simplify the output, so that you are not bothered by hypotheses that are impossible given the data.</li>
+                  </ul>
+                  <p>Next up is the <b>Evidence Accumulation</b> plot. While the belief update table and plot give you a snapshot after each sample, this plot lets you watch your belief evolve over time, sample by sample, all in one picture. Watch closely: does your belief settle down and become more confident in one hypothesis as more data comes in? That is Bayesian updating in motion!</p>
+                  <p>Finally, remember the <b>pizza plot</b> from the Likelihood section? It is back — but now comparing full <b>posterior beliefs</b> instead of just likelihoods. Tick <b>Compare Hypotheses</b> to see the table and/or plot, drag two hypotheses into the comparison panel, and see how much more (or less) probable one hypothesis is than the other, now that both your prior belief and the data have been taken into account.</p>
+                  <p><b>Something to think about:</b> as you collect more samples, do the hypotheses you once thought were plausible get ruled out? How quickly does that happen?</p></p>")
 
   introHtml <- createJaspHtml(
-    title    = gettext("Explanation of Posterior"),
+    title    = gettext("Explanation of Posterior Belief"),
     text     = text,
     position = 1
   )
@@ -1121,6 +1135,11 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   yBreaks <- jaspGraphs::getPrettyAxisBreaks(c(0, max(plot_df$prob)))
   yMax    <- min(1, max(yBreaks))
 
+  xTitle <- if (options[["bfUpdatePlotDisp"]] == "comb")
+    gettext("Hypothesis (Species Combination)")
+  else
+    gettext("Hypothesis (Species Count)")
+
   p <- ggplot2::ggplot(plot_df, ggplot2::aes(x = hyp, y = prob, fill = type)) +
     ggplot2::geom_col(position = ggplot2::position_dodge(width = 0.8), width = 0.7) +
     ggplot2::scale_x_discrete(labels = function(l) parse(text = l)) +     # 解析 plotmath
@@ -1129,7 +1148,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
                                 expand = ggplot2::expansion(mult = c(0, 0.08))) +
     ggplot2::scale_fill_manual(name = NULL,
                                values = c("Prior" = "#B0B0B0", "Posterior" = "#4DA3FF")) +
-    ggplot2::labs(x = NULL) +
+    ggplot2::labs(x = xTitle) +
     jaspGraphs::geom_rangeframe() +
     jaspGraphs::themeJaspRaw(legend.position = "right") +
     ggplot2::theme(plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
@@ -1232,14 +1251,14 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
                        ggplot2::aes(x = t, y = prob, color = hyp, group = hyp)) +
     ggplot2::geom_line(linewidth = 1) +
     jaspGraphs::geom_point() +
-    ggplot2::scale_x_continuous(name = gettext("Number of samples"),
+    ggplot2::scale_x_continuous(name = gettext("Number of Samples"),
                                 breaks = function(x) {
                                   b <- scales::pretty_breaks(n = 6)(x)
                                   b[b == floor(b) & b >= 0]
                                 },
                                 limits = range(xBreaks),
                                 expand = ggplot2::expansion(mult = c(0.02, 0.02))) +
-    ggplot2::scale_y_continuous(name = gettext("Posterior probability"),
+    ggplot2::scale_y_continuous(name = gettext("Posterior Probability"),
                                 breaks = yBreaks, limits = c(0, 1),
                                 expand = ggplot2::expansion(mult = c(0, 0.02))) +
     ggplot2::scale_color_manual(name   = NULL,
@@ -1620,8 +1639,18 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (!is.null(predContainer[["predIntroText"]]))
     return()
 
-  text <- gettext("Explain posterior prediction here...")
-
+  text <- gettext("<p>Nice! Now we have our posterior belief ready. But before you leave the island, your boss wants to know about one more thing: if you observe another animal on the island, what would be the chances of seeing each of the three species, and what would be the chance of seeing something you have not observed before?</p>
+                  <p>Think about it for a while, and you'll find a clever solution! For each species, you split the scenario according to different hypothetical species counts, calculate the probability of observing it accordingly, and add it up! This is what we will do in this section!</p>
+                  <p>There are two features in this section: the posterior predictive table and plot, and the prediction change plot.</p>
+                  <p>You can see the detailed breakdown of the probability of observing each of the three species, or seen vs. unseen species, in the posterior predictive table. The total probability of observing a species is simply the sum of the chances of seeing it under different hypotheses. The posterior predictive plot allows you to compare your posterior prediction with your prior prediction, so that you can see how the data changed your predictions. Again, you can make the following specifications:</p>
+                  <ul>
+                    <li>Switch between <b>Seen vs. Unseen</b> and <b>By individual species</b> to view predictions at different levels of detail.</li>
+                    <li>For the table, switch between <b>Number of species</b> and <b>Species combinations</b> to break up the predictive probabilities by different hypothesis types.</li>
+                    <li>For the plot, switch between <b>Last sample</b> and <b>Overall/Initial</b> to select what to focus on: the current sample only, or all samples combined.</li>
+                  </ul>
+                  <p>You can also view how your predictions change as you collect more samples, by enabling the prediction change plot. Just like the previous tables and plots, you can choose between <b>Seen vs. Unseen</b> and <b>By individual species</b> to control which data are displayed.</p>
+                  <p><b>Something to think about:</b> do you find anything that does not really make sense in the posterior predictions? If so, how does it connect to the assumptions behind the mathematical model that we used? How are you going to improve the model?</p>
+                  <p>Up to now, we have done all our tasks and are ready to go home, because a big reward awaits! However, something deep down in you is craving for another adventure. We got you! More adventures await you in the <b>Biodiversity Estimation (Full)</b> module! Take care and see you there!</p>")
   introHtml <- createJaspHtml(
     title    = gettext("Explanation of Posterior Prediction"),
     text     = text,
@@ -1750,7 +1779,6 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   table_df$hyp <- .makeTableLabels(table_df)
   table_df     <- table_df[table_df$posterior != 0, ]
 
-  # ── Column definitions ────────────────────────────────────────────
   predTable$addColumnInfo(name = "hyp",       title = gettext("Hypothesis"),        type = "string")
   predTable$addColumnInfo(name = "s",         title = gettext("Species Count"), type = "integer")
   if (!is_numS)
@@ -1921,7 +1949,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     ggplot2::scale_fill_manual(name   = NULL,
                                values = c("Prior"     = "#B0B0B0",
                                           "Posterior" = "#4DA3FF")) +
-    ggplot2::labs(x = NULL) +
+    ggplot2::labs(x = gettext("Species Type")) +
     jaspGraphs::geom_rangeframe() +
     jaspGraphs::themeJaspRaw(legend.position = "right") +
     ggplot2::theme(plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
@@ -1985,7 +2013,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
     plot_df <- data.frame(
       batch = rep(0:Tn, 3),
-      line  = factor(rep(c("cat", "horse", "pigeon"), each = Tn + 1)),
+      line  = factor(rep(c(gettext("Cat"), gettext("Horse"), gettext("Pigeon")), each = Tn + 1)),
       prob  = c(pred_cat, pred_horse, pred_pigeon)
     )
 
@@ -2013,7 +2041,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
     plot_df <- data.frame(
       batch = rep(0:Tn, 2),
-      line  = factor(rep(c("old", "new"), each = Tn + 1)),
+      line  = factor(rep(c(gettext("Seen"), gettext("Unseen")), each = Tn + 1)),
       prob  = c(pred_old, pred_new)
     )
   }
@@ -2027,7 +2055,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
                                     color = line, group = line)) +  
                       ggplot2::geom_line(linewidth = 1) +
                       jaspGraphs::geom_point() +
-                      ggplot2::scale_x_continuous(name = gettext("Number of samples"), breaks = 0:Tn, limits = c(0, Tn),
+                      ggplot2::scale_x_continuous(name = gettext("Number of Samples"), breaks = 0:Tn, limits = c(0, Tn),
                                           expand = ggplot2::expansion(mult = c(0.02, 0.02))) +
                       ggplot2::scale_y_continuous(name = gettext("Predictive Probability"), breaks = yBreaks, limits = c(0, 1),
                                                    expand = ggplot2::expansion(mult = c(0, 0.02))) +

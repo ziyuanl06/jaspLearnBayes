@@ -33,6 +33,14 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
   }
   should_sample <- (curr_draw > prev_draw) && (curr_reset == prev_reset)
 
+#######################Models#############################
+  if (is.null(jaspResults[["modelContainer"]]))
+    .befCreateModelContainer(jaspResults, options)
+
+  .befDisplayModel(jaspResults, options)
+  .befSummaryModel(jaspResults, options)
+  .befPlotModel(jaspResults, options)
+
 #######################Data#############################
   if (is.null(jaspResults[["dataContainer"]]))
     .befCreateDataContainer(jaspResults, options)
@@ -51,14 +59,6 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
   if (!isFALSE(options[["barAllSample"]]))
     .befDrawAllBar(jaspResults, options)
-
-#######################Models#############################
-  if (is.null(jaspResults[["modelContainer"]]))
-    .befCreateModelContainer(jaspResults, options)
-
-  .befDisplayModel(jaspResults, options)
-  .befSummaryModel(jaspResults, options)
-  .befPlotModel(jaspResults, options)
 
 #######################Abundance#############################
   if (is.null(jaspResults[["abundanceContainer"]]))
@@ -125,10 +125,13 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (!is.null(jaspResults[["introductoryText"]]))
       return()
 
-    text <- gettextf('You need an explanation here...') #TODO
+    text <- gettextf('<p>Do you still remember your career as a <b>biologist</b> and the adventure you had on the island in the Static module? If so, great! Because another adventure awaits! This time, you are heading to a <b>larger island</b> with potentially more animals, and even less idea of what you will encounter.</p>
+                    <p>Just for a quick recap: your main task is still to estimate how many different species live on the island, by updating what you believed before based on what the data tell you.</p>
+                    <p>But there is a twist. Some "big figures" up there told you that it would be great if you could also estimate the <b>abundance</b> of each species you encounter on the island, so that they would know which species most need protecting. Guess what? They also offered a huge reward for it!</p>
+                    <p>So, ready for your new adventure? Dive into the module and give it a spin!</p>') #TODO
 
     jaspResults[["introductoryText"]] <- createJaspHtml(
-      title        = gettext("Welcome to Species Classification with JASP!"),
+      title        = gettext("Welcome!"),
       text         = text,
       dependencies = "introductoryText",
       position     = 1
@@ -823,11 +826,29 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       abundancePlotsContainer <- createJaspContainer(title = "Estimated Species Abundance Plots")
       abundancePlotsContainer$dependOn(c("resetSample", "redrawTrigger",
                                         "despAbundancePlot", "despAbundancePlotExp",
-                                        "despAbundancePlotEst", "abundanceStat"))
+                                        "despAbundancePlotEst", "abundanceStat",
+                                        "despAbundancePlotSameScale"))
       abundanceContainer[["abundancePlotsContainer"]] <- abundancePlotsContainer
     } else {
       abundancePlotsContainer <- abundanceContainer[["abundancePlotsContainer"]]
     }
+
+    densityCache <- list()
+    for (s_val in s_values) {
+      plotName <- paste0("S = ", s_val)
+      if (!is.null(abundancePlotsContainer[[plotName]]))
+        next
+
+      for (spe in known_species) {
+        d <- .befComputeAbundanceDensity(s_val, spe, betaParamsDf, oldbetaParamsDf)
+        if (!is.null(d))
+          densityCache[[paste0(s_val, "_", spe)]] <- d
+      }
+    }
+
+    globalYMax <- NULL
+    if (isTRUE(options[["despAbundancePlotSameScale"]]) && length(densityCache) > 0)
+      globalYMax <- max(vapply(densityCache, function(d) d$maxDensity, numeric(1)))
 
     for (s_val in s_values) {
       plotName <- paste0("S = ", s_val)
@@ -837,9 +858,9 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
       plot_list <- list()
       for (spe in known_species) {
-        p <- .befPlotAbundance(s_val, spe, betaParamsDf, oldbetaParamsDf, options)
-        if (!is.null(p))
-          plot_list[[paste0(s_val, "_", spe)]] <- p
+        d <- densityCache[[paste0(s_val, "_", spe)]]
+        if (!is.null(d))
+          plot_list[[paste0(s_val, "_", spe)]] <- .befPlotAbundance(spe, d, options, globalYMax)
       }
 
       combined <- patchwork::wrap_plots(plot_list, ncol = length(known_species))
@@ -850,7 +871,8 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         height = 300
       )
       sPlot$dependOn(c("despAbundancePlot", "despAbundancePlotExp",
-                       "despAbundancePlotEst", "abundanceStat"))
+                       "despAbundancePlotEst", "abundanceStat",
+                       "despAbundancePlotSameScale"))
       sPlot$plotObject <- combined
 
       abundancePlotsContainer[[plotName]] <- sPlot
@@ -927,7 +949,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
 ###################Bio Likelihood#############################
   .befCreateBioLikeContainer <- function(jaspResults, options) {
-    bioLikeContainer <- createJaspContainer(title = gettext("Biodiversity Likelihood"))
+    bioLikeContainer <- createJaspContainer(title = gettext("Likelihood"))
     bioLikeContainer$dependOn(c("resetSample"))
     jaspResults[["bioLikeContainer"]] <- bioLikeContainer
   }
@@ -1184,7 +1206,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
 #######################Bio Posterior#############################
   .befCreateBioPostContainer <- function(jaspResults, options) {
-    bioPostContainer <- createJaspContainer(title = gettext("Biodiversity Posterior"))
+    bioPostContainer <- createJaspContainer(title = gettext("Posterior belief"))
     bioPostContainer$dependOn(c("resetSample"))
     jaspResults[["bioPostContainer"]] <- bioPostContainer
   }
@@ -1900,8 +1922,8 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       predTable$addColumnInfo(name = "species",  title = gettext("Species"),            type = "string")
       predTable$addColumnInfo(name = "estimate", title = gettext("Predicted abundance"), type = "number")
     } else {
-      predTable$addColumnInfo(name = "category", title = gettext("Category"),           type = "string")
-      predTable$addColumnInfo(name = "estimate", title = gettext("Predicted abundance"), type = "number")
+      predTable$addColumnInfo(name = "category", title = gettext("Category"),              type = "string")
+      predTable$addColumnInfo(name = "estimate", title = gettext("Predictive Probability"), type = "number")
     }
 
     bioPostContainer[["predTable"]] <- predTable
@@ -2130,7 +2152,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         ggplot2::coord_flip() +
         ggplot2::labs(
           x = gettext("Species"),
-          y = gettext("Predictive probability")
+          y = gettext("Predictive Probability")
         ) +
         jaspGraphs::geom_rangeframe() +
         jaspGraphs::themeJaspRaw() +
@@ -2188,7 +2210,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
           breaks = yBreaks[yBreaks <= yMax],
           expand = ggplot2::expansion(mult = c(0, 0.08))
         ) +
-        ggplot2::labs(x = "", y = gettext("Predictive probability")) +
+        ggplot2::labs(x = "", y = gettext("Predictive Probability")) +
         jaspGraphs::geom_rangeframe() +
         jaspGraphs::themeJaspRaw() +
         ggplot2::theme(legend.position = "none",
@@ -2326,7 +2348,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     }
 
 
-    .befPlotAbundance <- function(s_val, spe, betaParamsDf, oldbetaParamsDf, options) {
+    .befGetAbundanceBetaParams <- function(s_val, spe, betaParamsDf, oldbetaParamsDf) {
       old_row <- oldbetaParamsDf[oldbetaParamsDf$Species == spe &
                                   oldbetaParamsDf$S_Hypothesis == s_val, ]
       new_row <- betaParamsDf[betaParamsDf$Species == spe &
@@ -2346,6 +2368,47 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
       newAlpha <- new_row$alpha_a[1]
       newBeta  <- new_row$beta_b[1]
+
+      list(oldAlpha = oldAlpha, oldBeta = oldBeta, newAlpha = newAlpha, newBeta = newBeta)
+    }
+
+    .befAbundanceDensityRange <- function(params) {
+      x_lower <- max(0, min(stats::qbeta(0.001, params$oldAlpha, params$oldBeta),
+                             stats::qbeta(0.001, params$newAlpha, params$newBeta)))
+      x_upper <- min(1, max(stats::qbeta(0.999, params$oldAlpha, params$oldBeta),
+                             stats::qbeta(0.999, params$newAlpha, params$newBeta)))
+      x_pad   <- (x_upper - x_lower) * 0.15
+      x_lim_l <- max(0, x_lower - x_pad)
+      x_lim_r <- min(1, x_upper + x_pad)
+
+      seq(x_lim_l, x_lim_r, length.out = 200)
+    }
+
+    # Computes the density curve data once per (S, species) pair so it can be
+    # reused both for the global y-axis max (Enforce same scale) and the plot itself.
+    .befComputeAbundanceDensity <- function(s_val, spe, betaParamsDf, oldbetaParamsDf) {
+      params <- .befGetAbundanceBetaParams(s_val, spe, betaParamsDf, oldbetaParamsDf)
+      if (is.null(params))
+        return(NULL)
+
+      x_seq   <- .befAbundanceDensityRange(params)
+      df_plot <- data.frame(
+        x    = rep(x_seq, 2),
+        y    = c(dbeta(x_seq, params$oldAlpha, params$oldBeta),
+                dbeta(x_seq, params$newAlpha, params$newBeta)),
+        type = rep(c("Before", "After"), each = length(x_seq))
+      )
+
+      list(params = params, df_plot = df_plot, maxDensity = max(df_plot$y, na.rm = TRUE))
+    }
+
+    .befPlotAbundance <- function(spe, densityData, options, globalYMax = NULL) {
+      params   <- densityData$params
+      df_plot  <- densityData$df_plot
+      oldAlpha <- params$oldAlpha
+      oldBeta  <- params$oldBeta
+      newAlpha <- params$newAlpha
+      newBeta  <- params$newBeta
 
       .betaEst <- function(a, b, stat) {
         switch(stat,
@@ -2382,28 +2445,18 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
       show_est <- !isFALSE(options[["despAbundancePlotEst"]])
 
-      x_lower <- max(0, min(stats::qbeta(0.001, oldAlpha, oldBeta),
-                             stats::qbeta(0.001, newAlpha, newBeta)))
-      x_upper <- min(1, max(stats::qbeta(0.999, oldAlpha, oldBeta),
-                             stats::qbeta(0.999, newAlpha, newBeta)))
-      x_pad   <- (x_upper - x_lower) * 0.15
-      x_lim_l <- max(0, x_lower - x_pad)
-      x_lim_r <- min(1, x_upper + x_pad)
-
-      x_seq <- seq(x_lim_l, x_lim_r, length.out = 500)
-
-      df_plot <- data.frame(
-        x    = rep(x_seq, 2),
-        y    = c(dbeta(x_seq, oldAlpha, oldBeta),
-                dbeta(x_seq, newAlpha, newBeta)),
-        type = rep(c("Before", "After"), each = length(x_seq))
-      )
+      maxDensity <- if (!is.null(globalYMax)) globalYMax else densityData$maxDensity
+      yBreaks    <- jaspGraphs::getPrettyAxisBreaks(c(0, maxDensity))
+      yMax       <- max(yBreaks)
 
       p <- ggplot2::ggplot(df_plot, ggplot2::aes(x = x, y = y, linetype = type)) +
         ggplot2::geom_line(linewidth = 0.9) +
         ggplot2::scale_linetype_manual(values = c("Before" = "dashed", "After" = "solid")) +
-        ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(0, 0.05))) +
-        ggplot2::scale_y_continuous(expand = ggplot2::expansion(mult = c(0, 0.08))) +
+        ggplot2::scale_x_continuous(limits = if (!is.null(globalYMax)) c(0, 1) else NULL,
+                                    expand = ggplot2::expansion(mult = c(0, 0.05))) +
+        ggplot2::scale_y_continuous(limits = c(0, yMax),
+                                    breaks = yBreaks,
+                                    expand = ggplot2::expansion(mult = c(0, 0.08))) +
         ggplot2::labs(
           title    = spe,
           caption  = caption_text,
