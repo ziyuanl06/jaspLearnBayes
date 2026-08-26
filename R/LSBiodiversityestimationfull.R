@@ -504,8 +504,15 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       max  <- m[["maximum"]]
     }
 
+    distributionLabels <- c(
+      point   = "Point",
+      uniform = "Uniform",
+      poisson = "Poisson",
+      negbino = "Negative binomial"
+    )
+
     modelTable$addRows(list(
-      distribution = m[["type"]],
+      distribution = distributionLabels[[m[["type"]]]],
       para         = para,
       min          = as.character(min),
       max          = as.character(max)
@@ -848,8 +855,33 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       abundancePlotsContainer <- abundanceContainer[["abundancePlotsContainer"]]
     }
 
+    # Each hypothetical S gets one combined plot with one panel per discovered
+    # species. JASP re-checks every existing plot of this kind on every run
+    # (not just newly created ones), and once too many of these heavy combined
+    # plots exist at the same time, that re-check crashes the R engine itself
+    # (a native graphics failure, not a catchable R error). So the set of
+    # S-values that ever get a plot is locked in once (the smallest few still
+    # possible) instead of recomputed every run, which both caps the total
+    # number of these plots permanently and keeps them stable as s_values
+    # shrinks with further sampling.
+    maxSPlotsTotal <- 3
+    lockedState <- jaspResults[["abundancePlotSValuesLocked"]]
+    if (is.null(lockedState) && length(s_values) > 0) {
+      lockedState <- createJaspState(utils::head(s_values, maxSPlotsTotal))
+      lockedState$dependOn(c("resetSample"))
+      jaspResults[["abundancePlotSValuesLocked"]] <- lockedState
+
+      if (length(s_values) > maxSPlotsTotal)
+        abundancePlotsContainer[["abundancePlotsLimitNote"]] <- createJaspHtml(
+          text  = gettextf("Only %d of the possible hypothetical values of S are shown here, to avoid overloading the plot renderer.", maxSPlotsTotal),
+          title = ""
+        )
+    }
+
+    s_values_this_run <- if (is.null(lockedState)) c() else lockedState$object
+
     densityCache <- list()
-    for (s_val in s_values) {
+    for (s_val in s_values_this_run) {
       plotName <- paste0("S = ", s_val)
       if (!is.null(abundancePlotsContainer[[plotName]]))
         next
@@ -865,7 +897,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (isTRUE(options[["despAbundancePlotSameScale"]]) && length(densityCache) > 0)
       globalYMax <- max(vapply(densityCache, function(d) d$maxDensity, numeric(1)))
 
-    for (s_val in s_values) {
+    for (s_val in s_values_this_run) {
       plotName <- paste0("S = ", s_val)
 
       if (!is.null(abundancePlotsContainer[[plotName]]))
@@ -877,6 +909,9 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         if (!is.null(d))
           plot_list[[paste0(s_val, "_", spe)]] <- .befPlotAbundance(spe, d, options, globalYMax)
       }
+
+      if (length(plot_list) == 0)
+        next
 
       combined <- cowplot::plot_grid(plotlist = plot_list, nrow = 1)
 
@@ -1160,8 +1195,22 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     if (length(pairs) == 0)
       return()
 
+    # Each comparison keeps its own plot forever once created (containers have
+    # no removal mechanism), so the number processed per run is capped to
+    # bound how many of these heavy plots can ever accumulate.
+    maxComparisons <- 6
+
     comp_i <- 0
     for (pair in pairs) {
+      if (comp_i >= maxComparisons) {
+        if (is.null(bioBFPizzaContainer[["bioBFPizzaLimitNote"]]))
+          bioBFPizzaContainer[["bioBFPizzaLimitNote"]] <- createJaspHtml(
+            text  = gettextf("Only the first %d comparisons are shown here, to avoid overloading the plot renderer.", maxComparisons),
+            title = ""
+          )
+        break
+      }
+
       if (length(pair) < 2) next
       keyA <- pair[[1]]
       keyB <- pair[[2]]

@@ -904,8 +904,22 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (length(pairs) == 0)
     return()
 
+  # Each comparison keeps its own plot forever once created (containers have
+  # no removal mechanism), so the number processed per run is capped to
+  # bound how many of these heavy plots can ever accumulate.
+  maxComparisons <- 6
+
   comp_i <- 0
   for (pair in pairs) {
+    if (comp_i >= maxComparisons) {
+      if (is.null(likelihoodPizzaContainer[["likelihoodPizzaLimitNote"]]))
+        likelihoodPizzaContainer[["likelihoodPizzaLimitNote"]] <- createJaspHtml(
+          text  = gettextf("Only the first %d comparisons are shown here, to avoid overloading the plot renderer.", maxComparisons),
+          title = ""
+        )
+      break
+    }
+
     if (length(pair) < 2) next
     keyA <- pair[[1]]
     keyB <- pair[[2]]
@@ -1490,9 +1504,23 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
         ggplot2::theme_void()
     }
 
+    # This container is fully rebuilt (not incrementally extended) whenever
+    # the selected pairs change, so the number of comparisons rendered per
+    # rebuild is capped to bound how many of these heavy plots get created
+    # in one pass.
+    maxComparisons <- 6
     comp_i <- 0
 
     for (pair in pairs) {
+      if (comp_i >= maxComparisons) {
+        if (is.null(compPlotContainer[["compPlotLimitNote"]]))
+          compPlotContainer[["compPlotLimitNote"]] <- createJaspHtml(
+            text  = gettextf("Only the first %d comparisons are shown here, to avoid overloading the plot renderer.", maxComparisons),
+            title = ""
+          )
+        break
+      }
+
       if (length(pair) < 2) next
       keyA <- pair[[1]]
       keyB <- pair[[2]]

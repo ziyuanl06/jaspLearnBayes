@@ -438,7 +438,7 @@ Form
                 fieldWidth:			 130 * preferencesModel.uiScale
                 values:
                 [
-                    { label: qsTr("The current batch"), value: "batch"},
+                    { label: qsTr("Last sample"), value: "batch"},
                     { label: qsTr("Overall"), value: "all"}
                 ]
             }
