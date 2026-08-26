@@ -9,6 +9,7 @@ Maintainer: JASP Team <info@jasp-stats.org>
 Description: Learn Bayesian statistics with simple examples and supporting text
 License: GPL (>= 2)
 Imports:
+  cowplot,
   extraDistr,
   ggplot2,
   HDInterval,

@@ -70,6 +70,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     .besUpdateData(jaspResults, options)
 
   newTrigger <- createJaspState(c(curr_samp, curr_reset))
+  newTrigger$dependOn(c("resetTrigger"))
   jaspResults[["triggerState"]] <- newTrigger
 
   if (!is.null(sampleDataState))
@@ -165,7 +166,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 .besCreatePriorState <- function(jaspResults, options) {
 
   priorBeliefContainer <- createJaspContainer(title = gettext("Prior Belief"))
-  priorBeliefContainer$dependOn(c("PriorType", "priorS1", "priorS2", "priorS3"))
+  priorBeliefContainer$dependOn(c("priorType", "priorS1", "priorS2", "priorS3"))
 
 
 
@@ -244,8 +245,8 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   if (options[["priorDisplay"]] == "numS") {
     priorTable$addColumnInfo(name = "hypName",       title = gettext("Hypothesis"),    type = "string")
-    priorTable$addColumnInfo(name = "s",             title = gettext("Species Count"),    type = "integer")
-    priorTable$addColumnInfo(name = "priorPS",       title = gettext("Prior Probability"), type = "number")
+    priorTable$addColumnInfo(name = "s",             title = gettext("Species count"),    type = "integer")
+    priorTable$addColumnInfo(name = "priorPS",       title = gettext("Prior probability"), type = "number")
 
     if (is.null(prior_vec)) {
       priorTable$setError(gettext(
@@ -268,9 +269,9 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   if (options[["priorDisplay"]] == "comb") {
     priorTable$addColumnInfo(name = "hypName",                 title = gettext("Hypothesis"),           type = "string")
-    priorTable$addColumnInfo(name = "s",                       title = gettext("Species Count"),    type = "integer")
-    priorTable$addColumnInfo(name = "namesS",        title = gettext("Names of Species"),     type = "string")
-    priorTable$addColumnInfo(name = "priorPS",                 title = gettext("Prior Probability"), type = "number")
+    priorTable$addColumnInfo(name = "s",                       title = gettext("Species count"),    type = "integer")
+    priorTable$addColumnInfo(name = "namesS",        title = gettext("Names of species"),     type = "string")
+    priorTable$addColumnInfo(name = "priorPS",                 title = gettext("Prior probability"), type = "number")
 
     if (is.null(prior_df)) {
       priorTable$setError(gettext(
@@ -344,7 +345,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       )  +
       ggplot2::labs(
         x = gettext("Hypothesis (Species Count)"),
-        y = gettext("Prior Probability")
+        y = gettext("Prior probability")
       ) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -364,7 +365,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ggplot2::geom_col( width = 0.6) +
       ggplot2::scale_x_discrete(labels = function(x) parse(text = x)) +
       ggplot2::scale_fill_manual(
-        name   = gettext("Species Count"),
+        name   = gettext("Species count"),
         values = c("3" = "#9CC9F2", "2" = "#4DA3FF", "1" = "#1E5BB8")
       ) +
       ggplot2::scale_y_continuous(
@@ -375,7 +376,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
       ggplot2::labs(
         x = gettext("Hypothesis (Species Combination)"),
-        y = gettext("Prior Probability")
+        y = gettext("Prior probability")
       ) +
       jaspGraphs::geom_rangeframe() +
       jaspGraphs::themeJaspRaw() +
@@ -544,8 +545,8 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
     species <- sampleDataList[["species"]]
 
     dataTable$addColumnInfo(name = "species",       title = gettext("Species"),           type = "string")
-    dataTable$addColumnInfo(name = "old",           title = gettext("Previous Samples"),    type = "integer")
-    dataTable$addColumnInfo(name = "new",        title = gettext("Current Sample"),     type = "integer")
+    dataTable$addColumnInfo(name = "old",           title = gettext("Previous samples"),    type = "integer")
+    dataTable$addColumnInfo(name = "new",        title = gettext("Current sample"),     type = "integer")
     dataTable$addColumnInfo(name = "total",      title = gettext("Total"), type = "integer")
 
     for (i in seq_len(nrow(sample_df))) {
@@ -724,12 +725,12 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
 
   likelihoodTable$addColumnInfo(name = "hypName", title = gettext("Hypothesis"),       type = "string")
-  likelihoodTable$addColumnInfo(name = "s",       title = gettext("Species Count"), type = "integer")
+  likelihoodTable$addColumnInfo(name = "s",       title = gettext("Species count"), type = "integer")
   if (options[["likelihoodTableDisplay"]] == "comb")
     likelihoodTable$addColumnInfo(name = "spe",   title = gettext("Species"),           type = "string")
 
-  likelihoodTable$addColumnInfo(name = "batchL",  title = gettext("Sample Likelihood"), type = "number")
-  likelihoodTable$addColumnInfo(name = "allL",    title = gettext("Overall Likelihood"), type = "number")
+  likelihoodTable$addColumnInfo(name = "batchL",  title = gettext("Sample likelihood"), type = "number")
+  likelihoodTable$addColumnInfo(name = "allL",    title = gettext("Overall likelihood"), type = "number")
 
   for (i in seq_len(nrow(table_df))) {
     row <- list(
@@ -835,7 +836,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ggplot2::geom_col(width = 0.6) +
       ggplot2::scale_x_discrete(labels = function(l) parse(text = l)) +
       ggplot2::scale_fill_manual(
-        name   = gettext("Species Count"),
+        name   = gettext("Species count"),
         values = c("1" = "#1E5BB8", "2" = "#4DA3FF", "3" = "#9CC9F2")
       ) +
       ggplot2::scale_y_continuous(limits = c(0, yMax),
@@ -964,7 +965,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0.5, size = 11), # nolint
                      plot.margin = ggplot2::margin(t = 5, r = 15, b = 15, l = 5))
 
-    bfPlot$plotObject <- p
+    bfPlot$plotObject <- cowplot::plot_grid(p)
     likelihoodPizzaContainer[[plotName]] <- bfPlot
   }
 }
@@ -1042,12 +1043,12 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   posteriorRes <- .computePosterior(jaspResults, options)
 
   posteriorTable$addColumnInfo(name = "hypName", title = gettext("Hypothesis"), type = "string")
-  posteriorTable$addColumnInfo(name = "s", title = gettext("Species Count"), type = "integer")
+  posteriorTable$addColumnInfo(name = "s", title = gettext("Species count"), type = "integer")
 
 
 
   if (options[["bfUpdateTableDisp"]] == "comb") {
-    posteriorTable$addColumnInfo(name = "namesS", title = gettext("Names of Species"), type = "string")
+    posteriorTable$addColumnInfo(name = "namesS", title = gettext("Names of species"), type = "string")
   }
 
   table_df <- .generatePosteriorDf(posteriorRes, options, "table")
@@ -1058,7 +1059,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
 
   posteriorTable$addColumnInfo(name = "prior", title = gettext("Prior"), type = "number")
   posteriorTable$addColumnInfo(name = "likelihood", title = gettext("Likelihood"), type = "number")
-  posteriorTable$addColumnInfo(name = "raw_post", title = gettext("Raw Posterior"), type = "number")
+  posteriorTable$addColumnInfo(name = "raw_post", title = gettext("Raw posterior"), type = "number")
   posteriorTable$addColumnInfo(name = "posterior", title = gettext("Posterior"), type = "number")
 
   for (i in seq_len(nrow(table_df))) {
@@ -1610,10 +1611,10 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
       ) + ggplot2::labs(title   = gettext("Posterior Odds"),
                         caption = wrap_caption(message_post)) + pizza_theme
 
-      p_combined <- patchwork::wrap_plots(
+      p_combined <- cowplot::plot_grid(
         p_prior, op_plot("×"), p_lik, op_plot("="), p_post,
-        nrow    = 1,
-        widths  = c(3, 0.5, 3, 0.5, 3)
+        nrow       = 1,
+        rel_widths = c(3, 0.5, 3, 0.5, 3)
       )
 
       bfPlot <- createJaspPlot(title = plotName, width = 750, height = 300)
@@ -1780,7 +1781,7 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   table_df     <- table_df[table_df$posterior != 0, ]
 
   predTable$addColumnInfo(name = "hyp",       title = gettext("Hypothesis"),        type = "string")
-  predTable$addColumnInfo(name = "s",         title = gettext("Species Count"), type = "integer")
+  predTable$addColumnInfo(name = "s",         title = gettext("Species count"), type = "integer")
   if (!is_numS)
     predTable$addColumnInfo(name = "speName", title = gettext("Species"),           type = "string")
   predTable$addColumnInfo(name = "posterior", title = gettext("Posterior"),         type = "number")
@@ -1788,15 +1789,15 @@ LSBiodiversityestimationstatic <- function(jaspResults, dataset, options, state 
   if (is_oldNew) {
     predTable$addColumnInfo(name = "oldAbundance", title = gettext("Seen"),   type = "number", overtitle = gettext("Abundance"))
     predTable$addColumnInfo(name = "newAbundance", title = gettext("Unseen"), type = "number", overtitle = gettext("Abundance"))
-    predTable$addColumnInfo(name = "oldJoint",     title = gettext("Seen"),   type = "number", overtitle = gettext("Joint Probability"))
-    predTable$addColumnInfo(name = "newJoint",     title = gettext("Unseen"), type = "number", overtitle = gettext("Joint Probability"))
+    predTable$addColumnInfo(name = "oldJoint",     title = gettext("Seen"),   type = "number", overtitle = gettext("Joint probability"))
+    predTable$addColumnInfo(name = "newJoint",     title = gettext("Unseen"), type = "number", overtitle = gettext("Joint probability"))
   } else {
     predTable$addColumnInfo(name = "catAbundance",    title = gettext("Cat"),    type = "number", overtitle = gettext("Abundance"))
     predTable$addColumnInfo(name = "horseAbundance",  title = gettext("Horse"),  type = "number", overtitle = gettext("Abundance"))
     predTable$addColumnInfo(name = "pigeonAbundance", title = gettext("Pigeon"), type = "number", overtitle = gettext("Abundance"))
-    predTable$addColumnInfo(name = "catJoint",        title = gettext("Cat"),    type = "number", overtitle = gettext("Joint Probability"))
-    predTable$addColumnInfo(name = "horseJoint",      title = gettext("Horse"),  type = "number", overtitle = gettext("Joint Probability"))
-    predTable$addColumnInfo(name = "pigeonJoint",     title = gettext("Pigeon"), type = "number", overtitle = gettext("Joint Probability"))
+    predTable$addColumnInfo(name = "catJoint",        title = gettext("Cat"),    type = "number", overtitle = gettext("Joint probability"))
+    predTable$addColumnInfo(name = "horseJoint",      title = gettext("Horse"),  type = "number", overtitle = gettext("Joint probability"))
+    predTable$addColumnInfo(name = "pigeonJoint",     title = gettext("Pigeon"), type = "number", overtitle = gettext("Joint probability"))
   }
 
   for (i in seq_len(nrow(table_df))) {

@@ -32,7 +32,7 @@ Section
 	{
 		columns:	3
 		name:		"dataInputType"
-		title:		qsTr("Input Type")
+		title:		qsTr("Input type")
 		id:			dataInputType
 		defaultValue: dataSetInfo.dataAvailable ? "variable" : "counts"
 
@@ -63,7 +63,7 @@ Section
 
 	Group
 	{
-		title: qsTr("Count Data")
+		title: qsTr("Count data")
 		visible: dataInputTypeA.checked
 
 		IntegerField
@@ -85,7 +85,7 @@ Section
 
 	TextArea
 	{
-		title:		qsTr("Comma-separated Sequence of Observations")
+		title:		qsTr("Comma-separated sequence of observations")
 		visible:	dataInputTypeB.checked
 		height:		100
 		name:		"dataSequenceSequenceOfObservations"

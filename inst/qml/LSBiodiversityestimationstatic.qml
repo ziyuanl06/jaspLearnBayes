@@ -77,7 +77,7 @@ Form
 
                     Label
                     {
-                        text: qsTr("Hypothetical Species count (S)")
+                        text: qsTr("Hypothetical species count (S)")
                         Layout.preferredWidth: 255
                     }
 
@@ -101,7 +101,7 @@ Form
 
                     Label
                     {
-                        text: qsTr("Prior Probability p(S)")
+                        text: qsTr("Prior probability p(S)")
                         Layout.preferredWidth: 240
                     }
 
@@ -180,7 +180,7 @@ Form
 
         Group
         {
-            title: qsTr("Random Sample")
+            title: qsTr("Random sample")
 
             RowLayout
             {
@@ -417,12 +417,12 @@ Form
 
         Group
         {
-            title:      qsTr("Prior and Posterior")
+            title:      qsTr("Prior and posterior")
             columns:   1
 
             Group
             {
-                title:   qsTr("Belief Update")
+                title:   qsTr("Belief update")
                 columns: 2
 
                 CheckBox
@@ -516,7 +516,7 @@ Form
 
             Group
             {
-                title:   qsTr("Evidence Accumulation")
+                title:   qsTr("Evidence accumulation")
                 columns: 1
 
                 CheckBox
@@ -601,7 +601,7 @@ Form
 
             Group
             {
-                title: qsTr("Compare Hypotheses")
+                title: qsTr("Compare hypotheses")
                 columns: 1
                 
                 RowLayout
@@ -738,7 +738,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Seen vs. Unseen"),                value: "oldNew"},
+                            { label: qsTr("Seen vs. unseen"),                value: "oldNew"},
                             { label: qsTr("By individual species"),              value: "speType"},
                         ]
                 }
@@ -773,7 +773,7 @@ Form
                     fieldWidth:			 130 * preferencesModel.uiScale
                     values:
                         [
-                            { label: qsTr("Seen vs. Unseen"),                value: "oldNew"},
+                            { label: qsTr("Seen vs. unseen"),                value: "oldNew"},
                             { label: qsTr("By individual species"),              value: "speType"},
                         ]
                 }
@@ -819,7 +819,7 @@ Form
                         fieldWidth:			 130 * preferencesModel.uiScale
                         values:
                             [
-                                { label: qsTr("Seen vs. Unseen"),                value: "oldNew"},
+                                { label: qsTr("Seen vs. unseen"),                value: "oldNew"},
                                 { label: qsTr("By individual species"),              value: "speType"},
                             ]
                     }

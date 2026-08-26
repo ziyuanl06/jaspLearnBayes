@@ -181,7 +181,7 @@ Form {
 			{
 				name: "statistics";	label: qsTr("Statistics");	checked: true
 
-				CheckBox { name: "statisticsAdditional";	label: qsTr("Additional Statistics");	checked: false}
+				CheckBox { name: "statisticsAdditional";	label: qsTr("Additional statistics");	checked: false}
 			}
 			CheckBox { name: "priorPosterior"; label: qsTr("Priors and posteriors"); visible: false }
 		}

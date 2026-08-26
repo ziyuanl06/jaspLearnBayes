@@ -68,6 +68,7 @@ Form
                     visible:    modelTypeDD.currentValue === "point"
                     value:      1
                     min:        1
+                    max:        10
                     fieldWidth: 60 * preferencesModel.uiScale
                     showBorder: true
                     toolTip:    qsTr("How many different species do you think are there on the island?")

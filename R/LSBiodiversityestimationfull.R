@@ -49,7 +49,9 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
   if (should_sample)
     .befUpdateSample(jaspResults, options)
 
-  jaspResults[["triggerState"]] <- createJaspState(c(curr_draw, curr_reset))
+  newTriggerState <- createJaspState(c(curr_draw, curr_reset))
+  newTriggerState$dependOn(c("resetSample"))
+  jaspResults[["triggerState"]] <- newTriggerState
 
   .befDisplaySample(jaspResults, options)
   .befDisplayAll(jaspResults, options)
@@ -182,10 +184,23 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
       id      = 1:1000
     )
 
-    container[["islandState"]]           <- createJaspState(island_df)
-    container[["seenIdsState"]]          <- createJaspState(c())
-    container[["sampleState"]]           <- createJaspState(list())
-    container[["abundanceHistoryState"]] <- createJaspState(list())
+    islandDeps <- c("resetSample", "selectisland", "islandid")
+
+    islandState_j <- createJaspState(island_df)
+    islandState_j$dependOn(islandDeps)
+    container[["islandState"]] <- islandState_j
+
+    seenIdsState_j <- createJaspState(c())
+    seenIdsState_j$dependOn(islandDeps)
+    container[["seenIdsState"]] <- seenIdsState_j
+
+    sampleState_j <- createJaspState(list())
+    sampleState_j$dependOn(islandDeps)
+    container[["sampleState"]] <- sampleState_j
+
+    abundanceHistoryState_j <- createJaspState(list())
+    abundanceHistoryState_j$dependOn(islandDeps)
+    container[["abundanceHistoryState"]] <- abundanceHistoryState_j
   }
 
   .befUpdateSample <- function(jaspResults, options) {
@@ -217,8 +232,8 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     all_sample_history <- jaspResults[["islandContainer"]][["sampleState"]]$object
     all_sample_history[[length(all_sample_history) + 1]] <- batch_data
 
-    jaspResults[["islandContainer"]][["sampleState"]]  <- createJaspState(all_sample_history)
-    jaspResults[["islandContainer"]][["seenIdsState"]] <- createJaspState(all_seen_ids)
+    jaspResults[["islandContainer"]][["sampleState"]]$object  <- all_sample_history
+    jaspResults[["islandContainer"]][["seenIdsState"]]$object <- all_seen_ids
   }
 
   .befGetLastBatch <- function(jaspResults) {
@@ -263,8 +278,8 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     batchTable$dependOn(c("redrawTrigger", "resetSample"))
 
     batchTable$addColumnInfo(name = "species", title = gettext("Species"),           type = "string")
-    batchTable$addColumnInfo(name = "old",     title = gettext("Old (Re-captured)"), type = "integer")
-    batchTable$addColumnInfo(name = "new",     title = gettext("New (First-time)"),  type = "integer")
+    batchTable$addColumnInfo(name = "old",     title = gettext("Old (re-captured)"), type = "integer")
+    batchTable$addColumnInfo(name = "new",     title = gettext("New (first-time)"),  type = "integer")
     batchTable$addColumnInfo(name = "total",   title = gettext("Total"),             type = "integer")
 
     for (i in seq_len(nrow(clean_df))) {
@@ -319,7 +334,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     allTable$dependOn(c("redrawTrigger", "resetSample"))
 
     allTable$addColumnInfo(name = "species", title = gettext("Species"),               type = "string")
-    allTable$addColumnInfo(name = "counts",  title = gettext("Number of Individuals"), type = "integer")
+    allTable$addColumnInfo(name = "counts",  title = gettext("Number of individuals"), type = "integer")
 
     for (i in seq_len(nrow(all_counts))) {
       allTable$addRows(list(
@@ -736,7 +751,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     entry$batch <- length(history) + 1
 
     history[[length(history) + 1]] <- entry
-    ic[["abundanceHistoryState"]] <- createJaspState(history)
+    ic[["abundanceHistoryState"]]$object <- history
   }
 
   .befDisplayAbundanceTable <- function(jaspResults, options) {
@@ -863,7 +878,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
           plot_list[[paste0(s_val, "_", spe)]] <- .befPlotAbundance(spe, d, options, globalYMax)
       }
 
-      combined <- patchwork::wrap_plots(plot_list, ncol = length(known_species))
+      combined <- cowplot::plot_grid(plotlist = plot_list, nrow = 1)
 
       sPlot <- createJaspPlot(
         title  = paste0("S = ", s_val),
@@ -1070,8 +1085,8 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
                           "bioLikeTable", "bioLikeTableDisp", "bioLikeTableHide"))
 
     likeTable$addColumnInfo(name = "S",             title = gettext("Hypothetical S"),    type = "integer")
-    likeTable$addColumnInfo(name = "batch_biolike", title = gettext("Sample Likelihood"), type = "number")
-    likeTable$addColumnInfo(name = "all_biolike",   title = gettext("Overall Likelihood"), type = "number")
+    likeTable$addColumnInfo(name = "batch_biolike", title = gettext("Sample likelihood"), type = "number")
+    likeTable$addColumnInfo(name = "all_biolike",   title = gettext("Overall likelihood"), type = "number")
 
     n_rows <- nrow(like_df)
 
@@ -1199,7 +1214,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         ggplot2::labs(caption = note) +
         ggplot2::theme(plot.caption = ggplot2::element_text(hjust = 0.5, size = 11))
 
-      bfPlot$plotObject <- p
+      bfPlot$plotObject <- cowplot::plot_grid(p)
       bioBFPizzaContainer[[plotName]] <- bfPlot
     }
   }
@@ -1223,10 +1238,10 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
     beliefTable$dependOn(c("resetSample",
                             "beliefUpdateTable", "beliefUpdateTableStat",
                             "beliefUpdateTableHide"))
-    beliefTable$addColumnInfo(name = "S",             title = gettext("Species Count"), type = "integer")
+    beliefTable$addColumnInfo(name = "S",             title = gettext("Species count"), type = "integer")
     beliefTable$addColumnInfo(name = "prior",         title = gettext("Prior"),              type = "number")
     beliefTable$addColumnInfo(name = "likelihood",    title = gettext("Likelihood"),         type = "number")
-    beliefTable$addColumnInfo(name = "raw_posterior", title = gettext("Prior × Likelihood"), type = "number")
+    beliefTable$addColumnInfo(name = "raw_posterior", title = gettext("Prior × likelihood"), type = "number")
     beliefTable$addColumnInfo(name = "posterior",     title = gettext("Posterior"),          type = "number")
 
     bioPostContainer[["beliefUpdateTable"]] <- beliefTable
@@ -1669,7 +1684,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
                           "margAbundanceTable", "margAbundanceStat",
                           .befModelDepends))
     margTable$addColumnInfo(name = "species",  title = gettext("Species"),            type = "string")
-    margTable$addColumnInfo(name = "estimate", title = gettext("Marginal Abundance"), type = "number")
+    margTable$addColumnInfo(name = "estimate", title = gettext("Marginal abundance"), type = "number")
 
     bioPostContainer[["margAbundanceTable"]] <- margTable
 
@@ -1920,10 +1935,10 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
 
     if (is.null(predType) || predType == "speType") {
       predTable$addColumnInfo(name = "species",  title = gettext("Species"),            type = "string")
-      predTable$addColumnInfo(name = "estimate", title = gettext("Predicted abundance"), type = "number")
+      predTable$addColumnInfo(name = "estimate", title = gettext("Predictive probability"), type = "number")
     } else {
       predTable$addColumnInfo(name = "category", title = gettext("Category"),              type = "string")
-      predTable$addColumnInfo(name = "estimate", title = gettext("Predictive Probability"), type = "number")
+      predTable$addColumnInfo(name = "estimate", title = gettext("Predictive probability"), type = "number")
     }
 
     bioPostContainer[["predTable"]] <- predTable
@@ -2152,7 +2167,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
         ggplot2::coord_flip() +
         ggplot2::labs(
           x = gettext("Species"),
-          y = gettext("Predictive Probability")
+          y = gettext("Predictive probability")
         ) +
         jaspGraphs::geom_rangeframe() +
         jaspGraphs::themeJaspRaw() +
@@ -2210,7 +2225,7 @@ LSBiodiversityestimationfull <- function(jaspResults, dataset, options, state = 
           breaks = yBreaks[yBreaks <= yMax],
           expand = ggplot2::expansion(mult = c(0, 0.08))
         ) +
-        ggplot2::labs(x = "", y = gettext("Predictive Probability")) +
+        ggplot2::labs(x = "", y = gettext("Predictive probability")) +
         jaspGraphs::geom_rangeframe() +
         jaspGraphs::themeJaspRaw() +
         ggplot2::theme(legend.position = "none",

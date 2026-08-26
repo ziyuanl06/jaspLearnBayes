@@ -277,7 +277,7 @@ Section
 		Group
 		{
 			columns:			2
-			title:	qsTr("Bayes Factor")
+			title:	qsTr("Bayes factor")
 
 			RadioButtonGroup
 			{
